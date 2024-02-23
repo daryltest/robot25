@@ -44,7 +44,7 @@ public:
     float maxPower;
     float errPrev, errInteg;
     int prevPos;
-    float velocity;
+    Feedback* partner;
 
     Feedback(int target, float kp, float kd, float ki, float maxPower, int prevPos);
     float update(int pos, uint32_t tick);
@@ -70,7 +70,6 @@ Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower, int
     target(target), kp(kp), kd(kd), ki(ki), maxPower(maxPower), errPrev(0), errInteg(0), prevPos(prevPos)
 {
     prevTick = gpioTick();
-    velocity = 0;
 }
 
 float Feedback::update(int pos, uint32_t tick) {
@@ -81,10 +80,8 @@ float Feedback::update(int pos, uint32_t tick) {
     float deltaT = (tick - prevTick) / 1e6;
     prevTick = tick;
 
-    int deltaPos = pos - prevPos;
-    velocity = deltaPos / deltaT;
-
     float err = target - pos;
+    prevPos = pos;
 
     float dErr_dT = (err - errPrev) / deltaT;
     errPrev = err;
@@ -93,20 +90,22 @@ float Feedback::update(int pos, uint32_t tick) {
     
     float control = kp * err + kd * dErr_dT + ki * errInteg;
 
+    float maxPower = this->maxPower;
+    
+    if (partner != NULL) {
+        int partnerAhead = (this->target - this->prevPos) - (partner->target - partner->prevPos);
+
+        if (partnerAhead >= 3) {
+            maxPower += 0.03;
+        }
+    }
+
     if (control > maxPower) {
         control = maxPower;
     }
     else if (control < -maxPower) {
         control = -maxPower;
     }
-
-    // Slow start
-    // if ((velocity < 50000) && (control > SLOW_START_PWM_DUTY)) {
-    //     control = SLOW_START_PWM_DUTY;
-    // }
-    // if ((velocity > -50000) && (control < -SLOW_START_PWM_DUTY)) {
-    //     control = -SLOW_START_PWM_DUTY;
-    // }
 
     return control;
 }
@@ -139,21 +138,25 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    rightMtr->setSpeed(-0.35);
+    rightMtr->setSpeed(+0.35);
     leftMtr->setSpeed(+0.35);
     usleep(200000);
 
-    Feedback* leftFeedback = new Feedback(2640, 0.015, 0.00003, 0.000, 0.50, 0);
-    leftMtr->feedback = leftFeedback;
+    Feedback* leftFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.50, leftMtr->position);
+    Feedback* rightFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.50, rightMtr->position);
 
-    Feedback* rightFeedback = new Feedback(-2640, 0.015, 0.00003, 0.000, 0.48, 0);
+    leftFeedback->partner = rightFeedback;
+    rightFeedback->partner = leftFeedback;
+
+    leftMtr->feedback = leftFeedback;
     rightMtr->feedback = rightFeedback;
 
     sleep(2);
+
+
+
     // leftMtr->kickstart();
     // rightMtr->kickstart();
-
-
     // rightMtr->setSpeed(0.55);
     // leftMtr->setSpeed(0.55);
     // usleep(500000);
