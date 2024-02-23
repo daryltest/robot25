@@ -30,6 +30,7 @@ using namespace std;
 #define LED_BLUE 21
 
 #define MAX_PWM_DUTY 550000
+#define SLOW_START_PWM_DUTY 0.45
 
 uint32_t startTick;
 
@@ -55,7 +56,6 @@ public:
     bool invert;
     int lastSensePin, lastSenseA, lastSenseB;
     int position;
-    int totalSense, badSense;
 
     Feedback* feedback;
 
@@ -101,12 +101,12 @@ float Feedback::update(int pos, uint32_t tick) {
     }
 
     // Slow start
-    if (velocity < 50000 && control > 0.25) {
-        control = 0.25;
-    }
-    if (velocity > -50000 && control < -0.25) {
-        control = -0.25;
-    }
+    // if ((velocity < 50000) && (control > SLOW_START_PWM_DUTY)) {
+    //     control = SLOW_START_PWM_DUTY;
+    // }
+    // if ((velocity > -50000) && (control < -SLOW_START_PWM_DUTY)) {
+    //     control = -SLOW_START_PWM_DUTY;
+    // }
 
     return control;
 }
@@ -139,14 +139,18 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    Feedback* leftFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.35, 0);
-    leftMtr->feedback = leftFeedback;
+    rightMtr->setSpeed(0.30);
+    leftMtr->setSpeed(0.30);
+    sleep(1)
 
-    Feedback* rightFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.35, 0);
-    rightMtr->feedback = rightFeedback;
+    // Feedback* leftFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.65, 0);
+    // leftMtr->feedback = leftFeedback;
 
-    leftMtr->kickstart();
-    rightMtr->kickstart();
+    // Feedback* rightFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.65, 0);
+    // rightMtr->feedback = rightFeedback;
+
+    // leftMtr->kickstart();
+    // rightMtr->kickstart();
 
 
     // rightMtr->setSpeed(0.55);
@@ -157,16 +161,13 @@ int main() {
     // usleep(250000);
     // rightMtr->setSpeed(0.50);
     // leftMtr->setSpeed(0.50);
-    sleep(5.5);
+    // sleep(5.5);
 
     gpioWrite(MTR_ENABLE, 0);
 
     leftMtr->setSpeed(0);
     rightMtr->setSpeed(0);
 
-
-    cout << "LEFT:  " << leftMtr->badSense << " sense edges dropped out of " << leftMtr->totalSense << "\n";
-    cout << "RIGHT: " << rightMtr->badSense << " sense edges dropped out of " << rightMtr->totalSense << "\n";
     return 0;
 }
 
@@ -176,7 +177,7 @@ void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
 
 Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert):
     pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0),
-    feedback(NULL), totalSense(0), badSense(0)
+    feedback(NULL)
 {
     gpioSetMode(pinCtl1, PI_OUTPUT);
     gpioSetMode(pinCtl2, PI_OUTPUT);
@@ -218,12 +219,6 @@ void Motor::_senseAlert(int gpio, int level, uint32_t tick, void* user) {
 }
 
 void Motor::senseAlert(int gpio, int level, uint32_t tick) {
-    ++totalSense;
-    // if (gpio == lastSensePin) {
-    //     // This shouldn't happen. We got 2 A's in a row without a B, or vice-versa.
-    //     ++badSense;
-    //     return;
-    // }
     lastSensePin = gpio;
 
     if (gpio == pinSenseA) {
