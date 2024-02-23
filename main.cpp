@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <math.h>
 #include <pigpio.h>
 
 using namespace std;
@@ -34,19 +35,6 @@ uint32_t startTick;
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
 
-class Motor {
-public:
-    int pinCtl1, pinCtl2, pinPwm, pinSenseA, pinSenseB;
-    bool invert;
-    int lastSensePin, lastSenseA, lastSenseB;
-    int position;
-
-    Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert);
-    void setSpeed(float pwm);
-    static void _senseAlert(int gpio, int level, uint32_t tick, void* user);
-    void senseAlert(int gpio, int level, uint32_t tick);
-};
-
 class Feedback {
 public:
     uint32_t prevTick;
@@ -59,6 +47,21 @@ public:
     float update(int pos, uint32_t tick);
 };
 
+class Motor {
+public:
+    int pinCtl1, pinCtl2, pinPwm, pinSenseA, pinSenseB;
+    bool invert;
+    int lastSensePin, lastSenseA, lastSenseB;
+    int position;
+
+    Feedback* feedback;
+
+    Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert);
+    void setSpeed(float pwm);
+    static void _senseAlert(int gpio, int level, uint32_t tick, void* user);
+    void senseAlert(int gpio, int level, uint32_t tick);
+};
+
 Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower):
     target(target), kp(kp), kd(kd), ki(ki), maxPower(maxPower), errPrev(0), errInteg(0)
 {
@@ -66,17 +69,26 @@ Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower):
 }
 
 float Feedback::update(int pos, uint32_t tick) {
-    float deltaT = tick - prevTick;
+    float deltaT = (tick - prevTick) / 1e6;
     prevTick = tick;
 
-    float err = pos - target;
+    float err = target - pos;
 
     float dErr_dT = (err - errPrev) / deltaT;
     errPrev = err;
 
     errInteg += err * deltaT;
     
-    return kp * err + kd * dErr_dT + ki * errInteg;
+    float control = kp * err + kd * dErr_dT + ki * errInteg;
+
+    if (control > maxPower) {
+        control = maxPower;
+    }
+    else if (control < -maxPower) {
+        control = -maxPower;
+    }
+
+    return control;
 }
 
 Motor* leftMtr = NULL;
@@ -106,17 +118,26 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    rightMtr->setSpeed(0.25);
-    leftMtr->setSpeed(0.25);
-    usleep(250000);
-    rightMtr->setSpeed(0.40);
-    leftMtr->setSpeed(0.40);
-    usleep(250000);
-    rightMtr->setSpeed(0.50);
-    leftMtr->setSpeed(0.50);
-    sleep(3);
+    Feedback* leftFeedback = new Feedback(3000, 0.025, 0.001, 0.0001, 0.80);
+    leftMtr->setSpeed(0.15);
+    leftMtr->feedback = leftFeedback;
+
+
+    // rightMtr->setSpeed(0.25);
+    // leftMtr->setSpeed(0.25);
+    // usleep(250000);
+    // rightMtr->setSpeed(0.40);
+    // leftMtr->setSpeed(0.40);
+    // usleep(250000);
+    // rightMtr->setSpeed(0.50);
+    // leftMtr->setSpeed(0.50);
+     sleep(3.5);
 
     gpioWrite(MTR_ENABLE, 0);
+
+    leftMtr->setSpeed(0);
+    rightMtr->setSpeed(0);
+
 
     cout << "Hello World!\n";
     cout << badSense << " sense edges dropped out of " << totalSense << "\n";
@@ -128,7 +149,7 @@ void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
 }
 
 Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert):
-    pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0)
+    pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0), feedback(NULL)
 {
     gpioSetMode(pinCtl1, PI_OUTPUT);
     gpioSetMode(pinCtl2, PI_OUTPUT);
@@ -187,7 +208,15 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         position += ((lastSenseA == level) != invert) ? +1 : -1;
     }
 
-    printf("Lpos=%-6i  Rpos=%-6i  time=%-8u\n", leftMtr->position, rightMtr->position, tick - startTick);
+    printf("Lpos=%-6i  Rpos=%-6i  time=%-8u", leftMtr->position, rightMtr->position, tick - startTick);
+
+    if (feedback != NULL) {
+        float control = feedback->update(position, tick);
+        printf("  ctl=%f", control);
+        setSpeed(control);
+    }
+
+    printf("\n");
 }
 
 
