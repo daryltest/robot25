@@ -139,16 +139,17 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    rightMtr->setSpeed(0.30);
-    leftMtr->setSpeed(0.30);
-    sleep(1)
+    rightMtr->setSpeed(0.35);
+    leftMtr->setSpeed(0.35);
+    usleep(200000);
 
-    // Feedback* leftFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.65, 0);
-    // leftMtr->feedback = leftFeedback;
+    Feedback* leftFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.55, 0);
+    leftMtr->feedback = leftFeedback;
 
-    // Feedback* rightFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.65, 0);
-    // rightMtr->feedback = rightFeedback;
+    Feedback* rightFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.55, 0);
+    rightMtr->feedback = rightFeedback;
 
+    sleep(2);
     // leftMtr->kickstart();
     // rightMtr->kickstart();
 
@@ -230,14 +231,19 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         position += ((lastSenseA == level) != invert) ? +1 : -1;
     }
 
+    printf("%s", this == rightMtr ? "RIGHT sense " : "LEFT sense  ");
+
     printf("Lpos=%-6i  Rpos=%-6i  time=%-8u", leftMtr->position, rightMtr->position, tick - startTick);
 
     if (feedback != NULL) {
         float control = feedback->update(position, tick);
-        printf("  ctl=%f  vel=%f", control, feedback->velocity);
 
-        if (fabs(control) != FLT_MAX) {
+        if (control != FLT_MAX) {
             setSpeed(control);
+            printf("  ctl=%f", control);
+        }
+        else {
+            printf("  ctl=FLT_MAX");
         }
     }
 
