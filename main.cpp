@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <math.h>
+#include <cfloat>
 #include <pigpio.h>
 
 using namespace std;
@@ -30,7 +31,6 @@ using namespace std;
 
 #define MAX_PWM_DUTY 550000
 
-int totalSense = 0, badSense = 0;
 uint32_t startTick;
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
@@ -42,8 +42,10 @@ public:
     float kp, kd, ki;
     float maxPower;
     float errPrev, errInteg;
+    int prevPos;
+    float velocity;
 
-    Feedback(int target, float kp, float kd, float ki, float maxPower);
+    Feedback(int target, float kp, float kd, float ki, float maxPower, int prevPos);
     float update(int pos, uint32_t tick);
 };
 
@@ -53,6 +55,7 @@ public:
     bool invert;
     int lastSensePin, lastSenseA, lastSenseB;
     int position;
+    int totalSense, badSense;
 
     Feedback* feedback;
 
@@ -60,17 +63,26 @@ public:
     void setSpeed(float pwm);
     static void _senseAlert(int gpio, int level, uint32_t tick, void* user);
     void senseAlert(int gpio, int level, uint32_t tick);
+    void kickstart();
 };
 
-Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower):
-    target(target), kp(kp), kd(kd), ki(ki), maxPower(maxPower), errPrev(0), errInteg(0)
+Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower, int prevPos):
+    target(target), kp(kp), kd(kd), ki(ki), maxPower(maxPower), errPrev(0), errInteg(0), prevPos(prevPos)
 {
     prevTick = gpioTick();
+    velocity = 0;
 }
 
 float Feedback::update(int pos, uint32_t tick) {
+    if (tick == prevTick) {
+        return FLT_MAX; // Let us not divide by zero
+    }
+
     float deltaT = (tick - prevTick) / 1e6;
     prevTick = tick;
+
+    int deltaPos = pos - prevPos;
+    velocity = deltaPos / deltaT;
 
     float err = target - pos;
 
@@ -88,6 +100,14 @@ float Feedback::update(int pos, uint32_t tick) {
         control = -maxPower;
     }
 
+    // Slow start
+    if (velocity < 50000 && control > 0.25) {
+        control = 0.25;
+    }
+    if (velocity > -50000 && control < -0.25) {
+        control = -0.25;
+    }
+
     return control;
 }
 
@@ -96,7 +116,6 @@ Motor* rightMtr = NULL;
 
 int main() {
     gpioInitialise();
-    startTick = gpioTick();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
     gpioSetPullUpDown(BTN_GREEN, PI_PUD_UP);
@@ -116,22 +135,29 @@ int main() {
     rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
     rightMtr->setSpeed(0);
 
+    startTick = gpioTick();
+
     gpioWrite(MTR_ENABLE, 1);
 
-    Feedback* leftFeedback = new Feedback(3000, 0.025, 0.001, 0.0001, 0.80);
-    leftMtr->setSpeed(0.15);
+    Feedback* leftFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.35, 0);
     leftMtr->feedback = leftFeedback;
 
+    Feedback* rightFeedback = new Feedback(1000, 0.025, 0.001, 0.0001, 0.35, 0);
+    rightMtr->feedback = rightFeedback;
 
-    // rightMtr->setSpeed(0.25);
-    // leftMtr->setSpeed(0.25);
-    // usleep(250000);
+    leftMtr->kickstart();
+    rightMtr->kickstart();
+
+
+    // rightMtr->setSpeed(0.55);
+    // leftMtr->setSpeed(0.55);
+    // usleep(500000);
     // rightMtr->setSpeed(0.40);
     // leftMtr->setSpeed(0.40);
     // usleep(250000);
     // rightMtr->setSpeed(0.50);
     // leftMtr->setSpeed(0.50);
-     sleep(3.5);
+    sleep(5.5);
 
     gpioWrite(MTR_ENABLE, 0);
 
@@ -139,8 +165,8 @@ int main() {
     rightMtr->setSpeed(0);
 
 
-    cout << "Hello World!\n";
-    cout << badSense << " sense edges dropped out of " << totalSense << "\n";
+    cout << "LEFT:  " << leftMtr->badSense << " sense edges dropped out of " << leftMtr->totalSense << "\n";
+    cout << "RIGHT: " << rightMtr->badSense << " sense edges dropped out of " << rightMtr->totalSense << "\n";
     return 0;
 }
 
@@ -149,7 +175,8 @@ void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
 }
 
 Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert):
-    pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0), feedback(NULL)
+    pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0),
+    feedback(NULL), totalSense(0), badSense(0)
 {
     gpioSetMode(pinCtl1, PI_OUTPUT);
     gpioSetMode(pinCtl2, PI_OUTPUT);
@@ -192,11 +219,11 @@ void Motor::_senseAlert(int gpio, int level, uint32_t tick, void* user) {
 
 void Motor::senseAlert(int gpio, int level, uint32_t tick) {
     ++totalSense;
-    if (gpio == lastSensePin) {
-        // This shouldn't happen. We got 2 A's in a row without a B, or vice-versa.
-        ++badSense;
-        return;
-    }
+    // if (gpio == lastSensePin) {
+    //     // This shouldn't happen. We got 2 A's in a row without a B, or vice-versa.
+    //     ++badSense;
+    //     return;
+    // }
     lastSensePin = gpio;
 
     if (gpio == pinSenseA) {
@@ -212,13 +239,26 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
 
     if (feedback != NULL) {
         float control = feedback->update(position, tick);
-        printf("  ctl=%f", control);
-        setSpeed(control);
+        printf("  ctl=%f  vel=%f", control, feedback->velocity);
+
+        if (fabs(control) != FLT_MAX) {
+            setSpeed(control);
+        }
     }
 
     printf("\n");
 }
 
+void Motor::kickstart() {
+    if (feedback != NULL) {
+        if (feedback->target > position) {
+            setSpeed(+0.25);
+        }
+        else {
+            setSpeed(-0.25);
+        }
+    }
+}
 
 /*
 
