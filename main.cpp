@@ -30,6 +30,7 @@ using namespace std;
 #define MAX_PWM_DUTY 550000
 
 int totalSense = 0, badSense = 0;
+uint32_t startTick;
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
 
@@ -46,11 +47,44 @@ public:
     void senseAlert(int gpio, int level, uint32_t tick);
 };
 
+class Feedback {
+public:
+    uint32_t prevTick;
+    int target;
+    float kp, kd, ki;
+    float maxPower;
+    float errPrev, errInteg;
+
+    Feedback(int target, float kp, float kd, float ki, float maxPower);
+    float update(int pos, uint32_t tick);
+};
+
+Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower):
+    target(target), kp(kp), kd(kd), ki(ki), maxPower(maxPower), errPrev(0), errInteg(0)
+{
+    prevTick = gpioTick();
+}
+
+float Feedback::update(int pos, uint32_t tick) {
+    float deltaT = tick - prevTick;
+    prevTick = tick;
+
+    float err = pos - target;
+
+    float dErr_dT = (err - errPrev) / deltaT;
+    errPrev = err;
+
+    errInteg += err * deltaT;
+    
+    return kp * err + kd * dErr_dT + ki * errInteg;
+}
+
 Motor* leftMtr = NULL;
 Motor* rightMtr = NULL;
 
 int main() {
     gpioInitialise();
+    startTick = gpioTick();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
     gpioSetPullUpDown(BTN_GREEN, PI_PUD_UP);
@@ -153,7 +187,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         position += ((lastSenseA == level) != invert) ? +1 : -1;
     }
 
-    printf("L %8i R %8i t %-8i\n", leftMtr->position, rightMtr->position, tick);
+    printf("Lpos=%-6i  Rpos=%-6i  time=%-8u\n", leftMtr->position, rightMtr->position, tick - startTick);
 }
 
 
