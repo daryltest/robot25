@@ -143,10 +143,10 @@ int main() {
     leftMtr->setSpeed(+0.35);
     usleep(200000);
 
-    Feedback* leftFeedback = new Feedback(670, 0.015, 0.00003, 0.000, 0.50, 0);
+    Feedback* leftFeedback = new Feedback(2640, 0.015, 0.00003, 0.000, 0.50, 0);
     leftMtr->feedback = leftFeedback;
 
-    Feedback* rightFeedback = new Feedback(-670, 0.015, 0.00003, 0.000, 0.50, 0);
+    Feedback* rightFeedback = new Feedback(-2640, 0.015, 0.00003, 0.000, 0.48, 0);
     rightMtr->feedback = rightFeedback;
 
     sleep(2);
