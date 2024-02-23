@@ -1,3 +1,5 @@
+// g++ -Wall -pthread -o prog main.cpp -lpigpio -lrt
+
 #include <iostream>
 #include <unistd.h>
 #include <pigpio.h>
@@ -78,13 +80,6 @@ int main() {
     usleep(250000);
     rightMtr->setSpeed(0.50);
     leftMtr->setSpeed(0.50);
-    // leftMtr->setSpeed(-0.2);
-    // usleep(250000);
-    // leftMtr->setSpeed(-0.3);
-    // usleep(250000);
-    // leftMtr->setSpeed(-0.4);
-    // usleep(250000);
-    // leftMtr->setSpeed(-0.5);
     sleep(3);
 
     gpioWrite(MTR_ENABLE, 0);
@@ -97,7 +92,6 @@ int main() {
 void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
     cout << (const char *) user << " button " << (level ? "released" : "pressed ") << " at " << tick << "\n";
 }
-
 
 Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert):
     pinCtl1(pinCtl1), pinCtl2(pinCtl2), pinPwm(pinPwm), pinSenseA(pinSenseA), pinSenseB(pinSenseB), invert(invert), position(0)
@@ -119,8 +113,6 @@ void Motor::setSpeed(float pwm) {
         pwm = -pwm;
     }
 
-    // cout << "pwm=" << pwm << " fwd=" << fwd << " invert=" << invert << "\n";
-
     if (pwm == 0) {
         // Stop
         gpioWrite(pinCtl1, 0);
@@ -128,13 +120,11 @@ void Motor::setSpeed(float pwm) {
         gpioWrite(pinPwm, 0);
     }
     else if (fwd != invert) {
-        // cout << "fwd block";
         gpioWrite(pinCtl1, 1);
         gpioWrite(pinCtl2, 0);
         gpioHardwarePWM(pinPwm, 80000, (int) (pwm * MAX_PWM_DUTY));
     }
     else {
-        // cout << "rev block";
         gpioWrite(pinCtl1, 0);
         gpioWrite(pinCtl2, 1);
         gpioHardwarePWM(pinPwm, 80000, (int) (pwm * MAX_PWM_DUTY));
@@ -163,7 +153,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         position += ((lastSenseA == level) != invert) ? +1 : -1;
     }
 
-    printf("L %8i R %8i\n", leftMtr->position, rightMtr->position);
+    printf("L %8i R %8i t %-8i\n", leftMtr->position, rightMtr->position, tick);
 }
 
 
@@ -172,6 +162,11 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
 init all pins
 motors off
 
-
 read config file
+
+green light
+green button
+
+moves one at a time
+
 */
