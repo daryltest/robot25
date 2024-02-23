@@ -139,14 +139,14 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    rightMtr->setSpeed(0.35);
-    leftMtr->setSpeed(0.35);
+    rightMtr->setSpeed(-0.35);
+    leftMtr->setSpeed(+0.35);
     usleep(200000);
 
-    Feedback* leftFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.55, 0);
+    Feedback* leftFeedback = new Feedback(670, 0.015, 0.00003, 0.000, 0.50, 0);
     leftMtr->feedback = leftFeedback;
 
-    Feedback* rightFeedback = new Feedback(1000, 0.015, 0.00003, 0.000, 0.55, 0);
+    Feedback* rightFeedback = new Feedback(-670, 0.015, 0.00003, 0.000, 0.50, 0);
     rightMtr->feedback = rightFeedback;
 
     sleep(2);
