@@ -9,6 +9,7 @@
 #include <fstream>
 #include <streambuf>
 
+#include <cstring>
 #include <list>
 #include <vector>
 #include <string>
@@ -23,32 +24,41 @@ using namespace std;
 uint32_t startTick;
 
 float targetProgramDuration = 0;
+std::vector<string> programCommands;
 
+int greenButtonCount = 0;
+int blueButtonCount = 0;
+
+void readProgram();
 void completeFeedbacks();
 void simProgram(); 
-float timeProgram(std::vector<string> commands);
-void runProgram(std::vector<string> commands);
+float timeProgram();
+void runProgram();
 void runCommand(string command);
 void move(int distance);
 void turn(int distance);
-float nominalProgramTimeRemaining(std::vector<string> commands);
+float nominalProgramTimeRemaining(int startStep);
 float nominalCommandTime(string command);
+void badConfig();
 
+void waitForButton();
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
 
 Motor* leftMtr = NULL;
 Motor* rightMtr = NULL;
 
 int main() {
-    // read program, build vector; calculate estimated and target durations
-
     gpioInitialise();
+
+    readProgram();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
     gpioSetPullUpDown(BTN_GREEN, PI_PUD_UP);
+    gpioNoiseFilter(BTN_GREEN, 5000, 0);
 
     gpioSetMode(BTN_BLUE, PI_INPUT);
     gpioSetPullUpDown(BTN_BLUE, PI_PUD_UP);
+    gpioNoiseFilter(BTN_BLUE, 5000, 0);
 
     gpioSetMode(LED_RED, PI_OUTPUT);
     gpioWrite(LED_RED, 0);
@@ -64,6 +74,10 @@ int main() {
 
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
     gpioSetAlertFuncEx(BTN_BLUE, buttonAlert, ((void *) "Blue"));
+
+    waitForButton();
+
+    return 0;
 
     rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
     rightMtr->setSpeed(0);
@@ -85,7 +99,7 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        // motor around
+        runProgram();
 
         gpioWrite(MTR_ENABLE, 0);
         leftMtr->setSpeed(0);
@@ -93,6 +107,7 @@ int main() {
 
         gpioWrite(LED_GREEN, 0);
         gpioWrite(LED_RED, 1);
+
         // sleep till blue button
 
     }
@@ -104,16 +119,35 @@ void readProgram() {
 
     while (std::getline(file, str))
     {
+        if (targetProgramDuration == 0) {
+            try {
+                targetProgramDuration = std::stoi(str);
+            }
+            catch (std::invalid_argument const& ex) {
+                badConfig();
+            }
+            continue;
+        }
 
+        if (nominalCommandTime(str) == 0) {
+            badConfig();
+        }
 
-        cout << str << "\n";
+        programCommands.push_back(str);
     }
 
-    targetProgramDuration = 0;
+    cout << "Target program time: " << targetProgramDuration << "s\n";
+    cout << "Program commands:\n";
+
+    for (string command : programCommands) {
+        cout << command << "\n";
+    }
+    cout << "Nominal program time: " << nominalProgramTimeRemaining(0) << "s\n";
+    
 }
 
-void runProgram(std::vector<string> commands) {
-    for (string command : commands) {
+void runProgram() {
+    for (string command : programCommands) {
         runCommand(command);
     }
 }
@@ -150,11 +184,11 @@ void runCommand(string command) {
     }
 }
 
-float nominalProgramTimeRemaining(std::vector<string> commands, int startStep) {
+float nominalProgramTimeRemaining(int startStep) {
     float remaining = 0;
 
-    for (uint i = startStep; i < commands.size(); ++i) {
-        remaining += nominalCommandTime(commands[i]);
+    for (uint i = startStep; i < programCommands.size(); ++i) {
+        remaining += nominalCommandTime(programCommands[i]);
     }
 
     return remaining;
@@ -250,7 +284,32 @@ void completeFeedbacks() {
     }
 }
 
+void waitForButton() {
+    int count = greenButtonCount + blueButtonCount;
+
+    while (count == greenButtonCount + blueButtonCount) {
+        usleep(50000);
+    }
+}
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
-    cout << (const char *) user << " button " << (level ? "released" : "pressed ") << " at " << tick << "\n";
+    if (level && !strcmp((const char *) user, "Green")) {
+        ++greenButtonCount;
+    }
+    if (level && !strcmp((const char *) user, "Blue")) {
+        ++blueButtonCount;
+    }
+    
+    cout << (const char *) user << " button " << (!level ? "released" : "pressed ") << " at " << tick << "\n";
+}
+
+void badConfig() {
+    gpioSetMode(LED_RED, PI_OUTPUT);
+
+    while (true) {
+        gpioWrite(LED_RED, 1);
+        usleep(500000);
+        gpioWrite(LED_RED, 0);
+        usleep(500000);
+    }
 }
