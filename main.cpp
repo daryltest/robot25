@@ -62,6 +62,9 @@ int main() {
     gpioWrite(MTR_ENABLE, 1);
 
     move(1000);
+
+    move(-1500);
+
     cout << "Done!";
 
     gpioWrite(MTR_ENABLE, 0);
@@ -172,27 +175,38 @@ void runProgram(std::list<string> commands) {
     }
 }
 
-void move(int distance) {
+void executeProgramStep(int rightDistance, int leftDistance) {
+    while (rightMtr->feedback || leftMtr->feedback) {
+        usleep(10000);
+    }
+
+    int rightTarget = rightMtr->position + rightDistance;
+    int leftTarget = leftMtr->position + leftDistance;
+
     rightMtr->setSpeed(0.35 * (distance < 0 ? -1 : 1));
     leftMtr->setSpeed(0.35 * (distance < 0 ? -1 : 1));
     usleep(200000);
 
-    Feedback* leftFeedback = new Feedback(distance, 0.014, 0.00003, 0.000, 0.50, leftMtr->position);
-    Feedback* rightFeedback = new Feedback(distance, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
+    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
+    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, 0.50, leftMtr->position);
 
-    leftFeedback->partner = rightFeedback;
     rightFeedback->partner = leftFeedback;
+    leftFeedback->partner = rightFeedback;
 
-    leftMtr->feedback = leftFeedback;
     rightMtr->feedback = rightFeedback;
+    leftMtr->feedback = leftFeedback;
 
     while (rightMtr->feedback || leftMtr->feedback) {
         usleep(10000);
     }
 }
 
-void turn(int distance) {
+void move(int distance) {
+    executeProgramStep(distance, distance);
+}
 
+void turn(int distance) {
+    executeProgramStep(-distance, distance);
 }
 
 
@@ -200,33 +214,20 @@ void completeFeedbacks() {
     uint32_t nowTick = gpioTick();
 
     // See if neither motor has moved in 10ms
-    if (rightMtr->feedback && nowTick - rightMtr->feedback->prevTick > 10000 &&
-        leftMtr->feedback && nowTick - leftMtr->feedback->prevTick > 10000)
-    {
+    Feedback* rFeed = rightMtr->feedback;
+    Feedback* lFeed = leftMtr->feedback;
+
+    if (rFeed && (nowTick - rFeed->prevTick > 10000) && lFeed && nowTick - lFeed->prevTick > 10000) {
+        cout << "\nCOMPLETED feeds " << nowTick << " L=" << rFeed->prevTick << " R=" << rFeed->prevTick << "\n";
+        rFeed->completed = true;
+        lFeed->completed = true;
+
         rightMtr->feedback = NULL;
-        rightMtr->feedback->completed = true;        
         leftMtr->feedback = NULL;
-        leftMtr->feedback->completed = true;        
     }
 }
 
 
-
-
-
-    // std::vector
-    // char* program = "FRF"
-
-
-
-
-
-
-
-    // std::ifstream t("/home/darylc/robot24/route.txt");
-    // std::stringstream buffer;
-    // buffer << t.rdbuf();
-    // cout << buffer.str;
 
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
