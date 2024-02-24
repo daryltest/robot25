@@ -35,6 +35,9 @@ Motor* leftMtr = NULL;
 Motor* rightMtr = NULL;
 
 int main() {
+    simProgram();
+    return 0;
+
     gpioInitialise();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
@@ -98,19 +101,6 @@ int main() {
     // 360: 2650
 
 
-
-    // leftMtr->kickstart();
-    // rightMtr->kickstart();
-    // rightMtr->setSpeed(0.55);
-    // leftMtr->setSpeed(0.55);
-    // usleep(500000);
-    // rightMtr->setSpeed(0.40);
-    // leftMtr->setSpeed(0.40);
-    // usleep(250000);
-    // rightMtr->setSpeed(0.50);
-    // leftMtr->setSpeed(0.50);
-    // sleep(5.5);
-
     gpioWrite(MTR_ENABLE, 0);
 
     leftMtr->setSpeed(0);
@@ -120,6 +110,13 @@ int main() {
 }
 
 void simProgram() {
+    std::ifstream file("/home/darylc/robot24/route.txt");
+    std::string str; 
+    while (std::getline(file, str))
+    {
+        cout << str;
+    }
+
     std::list<string> commands;
 
     // S1 S2 S3
@@ -136,7 +133,7 @@ void simProgram() {
     commands.push_back("X1");
 
     //float programTime = timeProgram(commands);
-    runProgram(commands);
+    // runProgram(commands);
 }
 
 float timeProgram(std::list<string> commands) {
