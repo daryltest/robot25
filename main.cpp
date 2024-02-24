@@ -35,8 +35,8 @@ Motor* leftMtr = NULL;
 Motor* rightMtr = NULL;
 
 int main() {
-    simProgram();
-    return 0;
+    // simProgram();
+    // return 0;
 
     gpioInitialise();
 
@@ -64,14 +64,34 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    move(800);
+    
 
-    turn(-660);
+    turn(-1320);
+    sleep(1);
 
-    move(300);
-    move(-600);
+    // move(2200);
+    // sleep(1);
 
-    cout << "Done!";
+    // turn(660);
+    // sleep(1);
+    // turn(660);
+    // sleep(1);
+
+    // move(6590);
+    // sleep(1);
+
+    // turn(660);
+    // sleep(1);
+    // turn(660);
+    // sleep(1);
+
+
+    // turn(-660);
+
+    // move(300);
+    // move(-600);
+
+    cout << "Done!\n";
 
     gpioWrite(MTR_ENABLE, 0);
 
@@ -137,6 +157,22 @@ void simProgram() {
 }
 
 float timeProgram(std::list<string> commands) {
+    /*
+    S1 1.52
+    S2 3.65
+    S3 5.81
+    S4: 7.95
+    1: 2.40
+    2: 4.56
+    3: 6.66
+    R: 0.88
+    L: 0.83
+    U: 1.52
+    B: 2.42
+    X1: 2.16
+    X2: 4.30
+    X3: 6.46
+    */
     return 0;
 }
 
@@ -144,21 +180,21 @@ void runProgram(std::list<string> commands) {
     for (string command : commands) {
 
         if        (command == "S1") {
-            move(600);
+            move(1355);
         } else if (command == "S2") {
-            move(1600);
+            move(3520);
         } else if (command == "S3") {
-            move(2600);
+            move(5720);
         } else if (command == "S4") {
-            move(3600);
+            move(7925);
         } else if (command == "1") {
-            move(1000);
+            move(2200);
         } else if (command == "2") {
-            move(2000);
+            move(4400);
         } else if (command == "3") {
-            move(3000);
+            move(6590);
         } else if (command == "B") {
-            move(-1000);
+            move(-2185);
         } else if (command == "R") {
             turn(660);
         } else if (command == "L") {
@@ -166,11 +202,11 @@ void runProgram(std::list<string> commands) {
         } else if (command == "U") {
             turn(-1320);
         } else if (command == "X1") {
-            move(900);
+            move(1945);
         } else if (command == "X2") {
-            move(1900);
+            move(4145);
         } else if (command == "X3") {
-            move(2900);
+            move(6340);
         }
     }
 }
@@ -184,7 +220,7 @@ void executeProgramStep(int rightDistance, int leftDistance) {
     int leftTarget = leftMtr->position + leftDistance;
 
     rightMtr->setSpeed(0.35 * (rightDistance < 0 ? -1 : 1));
-    leftMtr->setSpeed(0.35 * (leftDistance < 0 ? -1 : 1));
+    leftMtr->setSpeed(0.39 * (leftDistance < 0 ? -1 : 1));
     usleep(200000);
 
     Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
@@ -202,22 +238,26 @@ void executeProgramStep(int rightDistance, int leftDistance) {
 }
 
 void move(int distance) {
+    int s = gpioTick();
     executeProgramStep(distance, distance);
+    printf("move(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
 void turn(int distance) {
+    int s = gpioTick();
     executeProgramStep(-distance, distance);
+    printf("turn(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
 
 void completeFeedbacks() {
     uint32_t nowTick = gpioTick();
 
-    // See if neither motor has moved in 10ms
+    // See if neither motor has moved in 30ms
     Feedback* rFeed = rightMtr->feedback;
     Feedback* lFeed = leftMtr->feedback;
 
-    if (rFeed && (nowTick - rFeed->prevTick > 10000) && lFeed && nowTick - lFeed->prevTick > 10000) {
+    if (rFeed && (nowTick - rFeed->prevTick > 30000) && lFeed && nowTick - lFeed->prevTick > 10000) {
         cout << "\nCOMPLETED feeds " << nowTick << " L=" << rFeed->prevTick << " R=" << rFeed->prevTick << "\n";
         rFeed->completed = true;
         lFeed->completed = true;
