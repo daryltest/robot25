@@ -61,9 +61,12 @@ int main() {
 
     gpioWrite(MTR_ENABLE, 1);
 
-    move(1000);
+    move(800);
 
-    move(-1500);
+    turn(-660);
+
+    move(300);
+    move(-600);
 
     cout << "Done!";
 
@@ -183,8 +186,8 @@ void executeProgramStep(int rightDistance, int leftDistance) {
     int rightTarget = rightMtr->position + rightDistance;
     int leftTarget = leftMtr->position + leftDistance;
 
-    rightMtr->setSpeed(0.35 * (distance < 0 ? -1 : 1));
-    leftMtr->setSpeed(0.35 * (distance < 0 ? -1 : 1));
+    rightMtr->setSpeed(0.35 * (rightDistance < 0 ? -1 : 1));
+    leftMtr->setSpeed(0.35 * (leftDistance < 0 ? -1 : 1));
     usleep(200000);
 
     Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
