@@ -22,6 +22,8 @@ using namespace std;
 
 uint32_t startTick;
 
+float targetProgramDuration = 0;
+
 void completeFeedbacks();
 void simProgram(); 
 float timeProgram(std::list<string> commands);
@@ -35,8 +37,7 @@ Motor* leftMtr = NULL;
 Motor* rightMtr = NULL;
 
 int main() {
-    // simProgram();
-    // return 0;
+    // read program, build vector; calculate estimated and target durations
 
     gpioInitialise();
 
@@ -45,6 +46,15 @@ int main() {
 
     gpioSetMode(BTN_BLUE, PI_INPUT);
     gpioSetPullUpDown(BTN_BLUE, PI_PUD_UP);
+
+    gpioSetMode(LED_RED, PI_OUTPUT);
+    gpioWrite(LED_RED, 0);
+
+    gpioSetMode(LED_GREEN, PI_OUTPUT);
+    gpioWrite(LED_GREEN, 0);
+
+    gpioSetMode(LED_BLUE, PI_OUTPUT);
+    gpioWrite(LED_BLUE, 0);
 
     gpioSetMode(MTR_ENABLE, PI_OUTPUT);
     gpioWrite(MTR_ENABLE, 0);
@@ -62,88 +72,42 @@ int main() {
 
     startTick = gpioTick();
 
-    gpioWrite(MTR_ENABLE, 1);
+    while (true) {
+        gpioWrite(LED_BLUE, 1);
 
-    
+        // sleep till green button
 
-    turn(-1320);
-    sleep(1);
+        gpioWrite(LED_BLUE, 0);
+        gpioWrite(LED_GREEN, 1);
 
-    // move(2200);
-    // sleep(1);
+        gpioWrite(MTR_ENABLE, 1);
 
-    // turn(660);
-    // sleep(1);
-    // turn(660);
-    // sleep(1);
+        // motor around
 
-    // move(6590);
-    // sleep(1);
+        gpioWrite(MTR_ENABLE, 0);
+        leftMtr->setSpeed(0);
+        rightMtr->setSpeed(0);
 
-    // turn(660);
-    // sleep(1);
-    // turn(660);
-    // sleep(1);
+        gpioWrite(LED_GREEN, 0);
+        gpioWrite(LED_RED, 1);
+        // sleep till blue button
 
-
-    // turn(-660);
-
-    // move(300);
-    // move(-600);
-
-    cout << "Done!\n";
-
-    gpioWrite(MTR_ENABLE, 0);
-
-    leftMtr->setSpeed(0);
-    rightMtr->setSpeed(0);
-    return 0;
-
-
-    rightMtr->setSpeed(-0.35);
-    leftMtr->setSpeed(-0.35);
-    usleep(200000);
-
-    Feedback* leftFeedback = new Feedback(-1000, 0.014, 0.00003, 0.000, 0.50, leftMtr->position);
-    Feedback* rightFeedback = new Feedback(-1000, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
-
-    leftFeedback->partner = rightFeedback;
-    rightFeedback->partner = leftFeedback;
-
-    leftMtr->feedback = leftFeedback;
-    rightMtr->feedback = rightFeedback;
-
-    sleep(4);
-
-    // L90: 
-    // R90: 
-    // 180:
-    // 360: 2650
-
-
-    gpioWrite(MTR_ENABLE, 0);
-
-    leftMtr->setSpeed(0);
-    rightMtr->setSpeed(0);
-
-    return 0;
+    }
 }
 
 void simProgram() {
+    targetDuration = 
     std::ifstream file("/home/darylc/robot24/route.txt");
-    std::string str; 
+    std::string str;
+
     while (std::getline(file, str))
     {
-        cout << str;
+
+
+        cout << str << "\n";
     }
 
-    std::list<string> commands;
-
-    // S1 S2 S3
-    // 1 2 3
-    // B
-    // R L U
-    // X1 X2 X3
+    std::<string> commands;
 
     commands.push_back("S1");
     commands.push_back("L");
@@ -156,29 +120,8 @@ void simProgram() {
     // runProgram(commands);
 }
 
-float timeProgram(std::list<string> commands) {
-    /*
-    S1 1.52
-    S2 3.65
-    S3 5.81
-    S4: 7.95
-    1: 2.40
-    2: 4.56
-    3: 6.66
-    R: 0.88
-    L: 0.83
-    U: 1.52
-    B: 2.42
-    X1: 2.16
-    X2: 4.30
-    X3: 6.46
-    */
-    return 0;
-}
-
 void runProgram(std::list<string> commands) {
     for (string command : commands) {
-
         if        (command == "S1") {
             move(1355);
         } else if (command == "S2") {
@@ -211,6 +154,44 @@ void runProgram(std::list<string> commands) {
     }
 }
 
+float programTimeRemaining(std::list<string> commands) {
+    float remaining = 0;
+
+    for (string command : commands) {
+        if        (command == "S1") {
+            remaining += 1.52;
+        } else if (command == "S2") {
+            remaining += 3.65;
+        } else if (command == "S3") {
+            remaining += 5.81;
+        } else if (command == "S4") {
+            remaining += 7.95;
+        } else if (command == "1") {
+            remaining += 2.40;
+        } else if (command == "2") {
+            remaining += 4.56;
+        } else if (command == "3") {
+            remaining += 6.66;
+        } else if (command == "B") {
+            remaining += 2.42;
+        } else if (command == "R") {
+            remaining += 0.88;
+        } else if (command == "L") {
+            remaining += 0.83;
+        } else if (command == "U") {
+            remaining += 1.52;
+        } else if (command == "X1") {
+            remaining += 2.16;
+        } else if (command == "X2") {
+            remaining += 4.30;
+        } else if (command == "X3") {
+            remaining += 6.46;
+        }
+    }
+
+    return remaining;
+}
+
 void executeProgramStep(int rightDistance, int leftDistance) {
     while (rightMtr->feedback || leftMtr->feedback) {
         usleep(10000);
@@ -239,13 +220,13 @@ void executeProgramStep(int rightDistance, int leftDistance) {
 
 void move(int distance) {
     int s = gpioTick();
-    executeProgramStep(distance, distance);
+    // executeProgramStep(distance, distance);
     printf("move(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
 void turn(int distance) {
     int s = gpioTick();
-    executeProgramStep(-distance, distance);
+    // executeProgramStep(-distance, distance);
     printf("turn(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
