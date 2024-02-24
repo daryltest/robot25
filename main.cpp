@@ -26,10 +26,13 @@ float targetProgramDuration = 0;
 
 void completeFeedbacks();
 void simProgram(); 
-float timeProgram(std::list<string> commands);
-void runProgram(std::list<string> commands);
+float timeProgram(std::vector<string> commands);
+void runProgram(std::vector<string> commands);
+void runCommand(string command);
 void move(int distance);
 void turn(int distance);
+float nominalProgramTimeRemaining(std::vector<string> commands);
+float nominalCommandTime(string command);
 
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
 
@@ -95,8 +98,7 @@ int main() {
     }
 }
 
-void simProgram() {
-    targetDuration = 
+void readProgram() {
     std::ifstream file("/home/darylc/robot24/route.txt");
     std::string str;
 
@@ -107,89 +109,89 @@ void simProgram() {
         cout << str << "\n";
     }
 
-    std::<string> commands;
-
-    commands.push_back("S1");
-    commands.push_back("L");
-    commands.push_back("1");
-    commands.push_back("B");
-    commands.push_back("R");
-    commands.push_back("X1");
-
-    //float programTime = timeProgram(commands);
-    // runProgram(commands);
+    targetProgramDuration = 0;
 }
 
-void runProgram(std::list<string> commands) {
+void runProgram(std::vector<string> commands) {
     for (string command : commands) {
-        if        (command == "S1") {
-            move(1355);
-        } else if (command == "S2") {
-            move(3520);
-        } else if (command == "S3") {
-            move(5720);
-        } else if (command == "S4") {
-            move(7925);
-        } else if (command == "1") {
-            move(2200);
-        } else if (command == "2") {
-            move(4400);
-        } else if (command == "3") {
-            move(6590);
-        } else if (command == "B") {
-            move(-2185);
-        } else if (command == "R") {
-            turn(660);
-        } else if (command == "L") {
-            turn(-660);
-        } else if (command == "U") {
-            turn(-1320);
-        } else if (command == "X1") {
-            move(1945);
-        } else if (command == "X2") {
-            move(4145);
-        } else if (command == "X3") {
-            move(6340);
-        }
+        runCommand(command);
     }
 }
 
-float programTimeRemaining(std::list<string> commands) {
+void runCommand(string command) {
+    if        (command == "S1") {
+        move(1355);
+    } else if (command == "S2") {
+        move(3520);
+    } else if (command == "S3") {
+        move(5720);
+    } else if (command == "S4") {
+        move(7925);
+    } else if (command == "1") {
+        move(2200);
+    } else if (command == "2") {
+        move(4400);
+    } else if (command == "3") {
+        move(6590);
+    } else if (command == "B") {
+        move(-2185);
+    } else if (command == "R") {
+        turn(660);
+    } else if (command == "L") {
+        turn(-660);
+    } else if (command == "U") {
+        turn(-1320);
+    } else if (command == "X1") {
+        move(1945);
+    } else if (command == "X2") {
+        move(4145);
+    } else if (command == "X3") {
+        move(6340);
+    }
+}
+
+float nominalProgramTimeRemaining(std::vector<string> commands, int startStep) {
     float remaining = 0;
 
-    for (string command : commands) {
-        if        (command == "S1") {
-            remaining += 1.52;
-        } else if (command == "S2") {
-            remaining += 3.65;
-        } else if (command == "S3") {
-            remaining += 5.81;
-        } else if (command == "S4") {
-            remaining += 7.95;
-        } else if (command == "1") {
-            remaining += 2.40;
-        } else if (command == "2") {
-            remaining += 4.56;
-        } else if (command == "3") {
-            remaining += 6.66;
-        } else if (command == "B") {
-            remaining += 2.42;
-        } else if (command == "R") {
-            remaining += 0.88;
-        } else if (command == "L") {
-            remaining += 0.83;
-        } else if (command == "U") {
-            remaining += 1.52;
-        } else if (command == "X1") {
-            remaining += 2.16;
-        } else if (command == "X2") {
-            remaining += 4.30;
-        } else if (command == "X3") {
-            remaining += 6.46;
-        }
+    for (uint i = startStep; i < commands.size(); ++i) {
+        remaining += nominalCommandTime(commands[i]);
     }
 
     return remaining;
+}
+
+float nominalCommandTime(string command) {
+    if        (command == "S1") {
+        return 1.52;
+    } else if (command == "S2") {
+        return 3.65;
+    } else if (command == "S3") {
+        return 5.81;
+    } else if (command == "S4") {
+        return 7.95;
+    } else if (command == "1") {
+        return 2.40;
+    } else if (command == "2") {
+        return 4.56;
+    } else if (command == "3") {
+        return 6.66;
+    } else if (command == "B") {
+        return 2.42;
+    } else if (command == "R") {
+        return 0.88;
+    } else if (command == "L") {
+        return 0.83;
+    } else if (command == "U") {
+        return 1.52;
+    } else if (command == "X1") {
+        return 2.16;
+    } else if (command == "X2") {
+        return 4.30;
+    } else if (command == "X3") {
+        return 6.46;
+    }
+
+    return 0;
 }
 
 void executeProgramStep(int rightDistance, int leftDistance) {
@@ -249,25 +251,6 @@ void completeFeedbacks() {
 }
 
 
-
-
 void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
     cout << (const char *) user << " button " << (level ? "released" : "pressed ") << " at " << tick << "\n";
 }
-
-
-/*
-
-init all pins
-motors off
-
-read config file
-
-green light
-
-wait for green button
-
-moves one at a time
-calculate time ratio
-
-*/
