@@ -24,6 +24,11 @@ using namespace std;
 uint32_t startTick;
 
 float targetProgramDuration = 0;
+float targetProgramEndTime = 0;
+uint programStep = 0;
+
+float pacingMaxPower = 0.50;
+
 std::vector<string> programCommands;
 
 int greenButtonCount = 0;
@@ -40,6 +45,7 @@ void turn(int distance);
 float nominalProgramTimeRemaining(int startStep);
 float nominalCommandTime(string command);
 void badConfig();
+void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining);
 
 void waitForButton();
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
@@ -75,10 +81,6 @@ int main() {
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
     gpioSetAlertFuncEx(BTN_BLUE, buttonAlert, ((void *) "Blue"));
 
-    waitForButton();
-
-    return 0;
-
     rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
     rightMtr->setSpeed(0);
 
@@ -92,7 +94,7 @@ int main() {
     while (true) {
         gpioWrite(LED_BLUE, 1);
 
-        // sleep till green button
+        waitForButton();
 
         gpioWrite(LED_BLUE, 0);
         gpioWrite(LED_GREEN, 1);
@@ -108,17 +110,28 @@ int main() {
         gpioWrite(LED_GREEN, 0);
         gpioWrite(LED_RED, 1);
 
-        // sleep till blue button
+        waitForButton();
 
+        gpioWrite(LED_RED, 0);
     }
 }
 
 void readProgram() {
-    std::ifstream file("/home/darylc/robot24/route.txt");
+    // std::ifstream file("/home/darylc/robot24/route.txt");
+
+    std::ifstream file("/boot/robotroute.txt");
     std::string str;
 
     while (std::getline(file, str))
     {
+        while (str[str.size() - 1] == '\r') {
+            str.erase(str.size() - 1, 1);
+        }
+
+        if (str.size() == 0) {
+            continue;
+        }
+
         if (targetProgramDuration == 0) {
             try {
                 targetProgramDuration = std::stoi(str);
@@ -147,10 +160,32 @@ void readProgram() {
 }
 
 void runProgram() {
-    for (string command : programCommands) {
-        runCommand(command);
+    targetProgramEndTime = gpioTick() / 1e6 + targetProgramDuration;
+
+    for (programStep = 0; programStep < programCommands.size(); ++programStep) {
+        float nominalTimeRemaining = nominalProgramTimeRemaining(programStep);
+        float targetTimeRemaining = targetProgramEndTime - gpioTick() / 1e6;
+
+        adjustMaxPower(nominalTimeRemaining, targetTimeRemaining);
+        
+        runCommand(programCommands[programStep]);
     }
 }
+
+void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining){
+    float scalingFactor = targetTimeRemaining / nominalTimeRemaining;
+
+    printf("nominal rem: %f  target rem: %f  scaling: %f\n", nominalTimeRemaining, targetTimeRemaining, scalingFactor);
+
+    if (scalingFactor > 1.1) {
+        scalingFactor = 1.1;
+    } else if (scalingFactor < 0.75) {
+        scalingFactor = 0.75;
+    }
+
+    pacingMaxPower = 0.50 * scalingFactor;
+}
+
 
 void runCommand(string command) {
     if        (command == "S1") {
@@ -240,8 +275,8 @@ void executeProgramStep(int rightDistance, int leftDistance) {
     leftMtr->setSpeed(0.39 * (leftDistance < 0 ? -1 : 1));
     usleep(200000);
 
-    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, 0.50, rightMtr->position);
-    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, 0.50, leftMtr->position);
+    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, pacingMaxPower, rightMtr->position);
+    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, pacingMaxPower, leftMtr->position);
 
     rightFeedback->partner = leftFeedback;
     leftFeedback->partner = rightFeedback;
@@ -256,13 +291,13 @@ void executeProgramStep(int rightDistance, int leftDistance) {
 
 void move(int distance) {
     int s = gpioTick();
-    // executeProgramStep(distance, distance);
+    executeProgramStep(distance, distance);
     printf("move(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
 void turn(int distance) {
     int s = gpioTick();
-    // executeProgramStep(-distance, distance);
+    executeProgramStep(-distance, distance);
     printf("turn(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
 }
 
