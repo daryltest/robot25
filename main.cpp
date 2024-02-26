@@ -173,15 +173,15 @@ void runProgram() {
 }
 
 void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining){
-    float scalingFactor = targetTimeRemaining / nominalTimeRemaining;
+    float scalingFactor = nominalTimeRemaining / targetTimeRemaining;
+
+    if (scalingFactor > 1.30) {
+        scalingFactor = 1.30;
+    } else if (scalingFactor < 0.50) {
+        scalingFactor = 0.50;
+    }
 
     printf("nominal rem: %f  target rem: %f  scaling: %f\n", nominalTimeRemaining, targetTimeRemaining, scalingFactor);
-
-    if (scalingFactor > 1.1) {
-        scalingFactor = 1.1;
-    } else if (scalingFactor < 0.75) {
-        scalingFactor = 0.75;
-    }
 
     pacingMaxPower = 0.50 * scalingFactor;
 }
