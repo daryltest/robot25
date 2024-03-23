@@ -101,7 +101,8 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        runProgram();
+        move(700);
+        // runProgram();
 
         gpioWrite(MTR_ENABLE, 0);
         leftMtr->setSpeed(0);
@@ -112,6 +113,8 @@ int main() {
 
         waitForButton();
 
+        rightMtr->position = 0;
+        leftMtr->position = 0;
         gpioWrite(LED_RED, 0);
     }
 }
@@ -183,7 +186,8 @@ void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining){
 
     printf("nominal rem: %f  target rem: %f  scaling: %f\n", nominalTimeRemaining, targetTimeRemaining, scalingFactor);
 
-    pacingMaxPower = 0.50 * scalingFactor;
+    // pacingMaxPower = 0.50 * scalingFactor;
+    printf("SCALING DISABLED");
 }
 
 

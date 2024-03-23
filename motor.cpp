@@ -66,9 +66,9 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         position += ((lastSenseA == level) != invert) ? +1 : -1;
     }
 
-    // printf("%s", this == rightMtr ? "RIGHT sense " : "LEFT sense  ");
+    printf("%s", this == rightMtr ? "RIGHT sense " : "LEFT sense  ");
 
-    // printf("Lpos=%-6i  Rpos=%-6i  time=%-8u", leftMtr->position, rightMtr->position, tick - startTick);
+    printf("Lpos=%-6i  Rpos=%-6i  time=%-8u", leftMtr->position, rightMtr->position, tick - startTick);
 
     if (feedback != NULL) {
         float control = feedback->update(position, tick);
@@ -82,5 +82,5 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         }
     }
 
-    // printf("\n");
+    printf("\n");
 }
