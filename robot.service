@@ -1,0 +1,11 @@
+[Unit]
+Description=Robot daemon
+
+[Service]
+# CPUAffinity=3
+Type=forking
+PIDFile=robot.pid
+ExecStart=/home/darylc/robot24/prog
+
+[Install]
+WantedBy=multi-user.target
