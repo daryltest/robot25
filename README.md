@@ -2,6 +2,13 @@
 
 Download, build, and install pigpio
 
+
+raspi-config:
+Disable serial
+set locale to en.us UTF8
+set keyboard to en.us-generic 104
+
+
 TODO:
 
 /etc/systemd/system/robot.service
