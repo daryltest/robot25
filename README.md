@@ -16,5 +16,6 @@ TODO:
   cpu affinity...?
 
 get openCV built
+-  https://towardsdatascience.com/installing-opencv-in-pizero-w-8e46bd42a3d3
 
 where else do we have custom things stashed?
