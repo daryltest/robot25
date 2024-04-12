@@ -1,9 +1,11 @@
+# /etc/systemd/system/robot.service
+
 [Unit]
 Description=Robot daemon
 
 [Service]
 # CPUAffinity=3
-Type=forking
+Type=simple
 PIDFile=robot.pid
 ExecStart=/home/darylc/robot24/prog
 

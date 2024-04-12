@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <signal.h>
 #include <math.h>
 #include <cfloat>
 #include <pigpio.h>
@@ -55,6 +56,8 @@ Motor* rightMtr = NULL;
 
 int main() {
     gpioInitialise();
+
+    signal(SIGCONT, SIG_IGN);
 
     readProgram();
 
