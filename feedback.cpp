@@ -45,7 +45,7 @@ float Feedback::update(int pos, uint32_t tick) {
         int partnerAhead = abs(this->target - this->prevPos) - abs(partner->target - partner->prevPos);
 
         if (partnerAhead >= 3) {
-            maxPower += 0.03;
+            maxPower += 0.04;
         }
     }
 
