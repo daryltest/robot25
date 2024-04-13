@@ -104,8 +104,7 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        move(700);
-        // runProgram();
+        runProgram();
 
         gpioWrite(MTR_ENABLE, 0);
         leftMtr->setSpeed(0);
@@ -159,7 +158,7 @@ void readProgram() {
     cout << "Program commands:\n";
 
     for (string command : programCommands) {
-        cout << command << "\n";
+        cout << command << ",";
     }
     cout << "Nominal program time: " << nominalProgramTimeRemaining(0) << "s\n";
     
@@ -189,8 +188,8 @@ void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining){
 
     printf("nominal rem: %f  target rem: %f  scaling: %f\n", nominalTimeRemaining, targetTimeRemaining, scalingFactor);
 
-    // pacingMaxPower = 0.50 * scalingFactor;
-    printf("SCALING DISABLED");
+    pacingMaxPower = 0.50 * scalingFactor;
+    // printf("SCALING DISABLED");
 }
 
 
