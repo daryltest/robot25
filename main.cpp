@@ -212,8 +212,12 @@ void runCommand(string command) {
         move(-2185);
     } else if (command == "R") {
         turn(660);
+    } else if (command == ">") {
+        turn(22);
     } else if (command == "L") {
         turn(-660);
+    } else if (command == "<") {
+        turn(-22);
     } else if (command == "U") {
         turn(-1320);
     } else if (command == "X1") {
@@ -254,8 +258,12 @@ float nominalCommandTime(string command) {
         return 2.42;
     } else if (command == "R") {
         return 0.88;
+    } else if (command == ">") {
+        return 0.3;
     } else if (command == "L") {
         return 0.83;
+    } else if (command == "<") {
+        return 0.3;
     } else if (command == "U") {
         return 1.52;
     } else if (command == "X1") {
@@ -279,7 +287,11 @@ void executeProgramStep(int rightDistance, int leftDistance) {
 
     rightMtr->setSpeed(0.35 * (rightDistance < 0 ? -1 : 1));
     leftMtr->setSpeed(0.39 * (leftDistance < 0 ? -1 : 1));
-    usleep(200000);
+    if (abs(rightDistance) < 200 && abs(leftDistance) < 200) {
+        usleep(75000);
+    } else {
+        usleep(200000);
+    }
 
     Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, pacingMaxPower, rightMtr->position);
     Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, pacingMaxPower, leftMtr->position);
