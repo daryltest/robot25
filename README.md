@@ -17,6 +17,21 @@ Download, build, and install pigpio
     - Locale: en.us UTF8 (locale on first boot seems kind of random?)
     - Keyboard: en.us-generic 104 (Generic 104, English (US), No AltGr, No Compose)
 
+# Pigpio
+
+https://abyz.me.uk/rpi/pigpio/download.html
+https://github.com/joan2937/pigpio (also personal fork)
+
+```
+wget https://github.com/joan2937/pigpio/archive/master.zip
+unzip master.zip
+cd pigpio-master
+make
+sudo make install
+# (if the Python part of the install fails it may be because you need the setup tools):
+sudo apt install python-setuptools python3-setuptools
+```
+
 # Clone
 
 ```
