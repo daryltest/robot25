@@ -11,10 +11,11 @@ Download, build, and install pigpio
 ## Configuring OS
 
 `sudo raspi-config`
-  - Disable serial login prompt if you want to use those GPIO pins
-    - Interface Options -> Serial Port
-  - set locale to en.us UTF8 (locale on first boot seems kind of random?)
-  - set keyboard to en.us-generic 104
+  - Interface Options -> Serial Port
+    - Disable serial login prompt if you want to use those GPIO pins
+  - Localisation Options
+    - Locale: en.us UTF8 (locale on first boot seems kind of random?)
+    - Keyboard: en.us-generic 104 (Generic 104, English (US), No AltGr, No Compose)
 
 # Configure bootup program
 
