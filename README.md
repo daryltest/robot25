@@ -29,7 +29,7 @@ cd pigpio-master
 make
 sudo make install
 # (if the Python part of the install fails it may be because you need the setup tools):
-sudo apt install python-setuptools python3-setuptools
+sudo apt install python3-setuptools
 ```
 
 # Clone
