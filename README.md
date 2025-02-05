@@ -17,9 +17,24 @@ Download, build, and install pigpio
     - Locale: en.us UTF8 (locale on first boot seems kind of random?)
     - Keyboard: en.us-generic 104 (Generic 104, English (US), No AltGr, No Compose)
 
-# Configure bootup program
+# Clone
 
-Use example file: /etc/systemd/system/robot.service
+```
+git clone https://github.com/daryltest/robot24.git
+git config --add credential.helper cache
+git pull
+git status
+```
+
+# System files
+
+Checked in under `system-files`.
+
+Copy wifi connection files, remember to fill in WPA password.
+
+## Configure bootup program
+
+/etc/systemd/system/robot.service
   - `WantedBy=multi-user.target` entry is what makes it run on bootup
   - Think about CPU affinity so it doesn't get interrupted?
     - `isolcpus` in /boot/cmdline.txt
