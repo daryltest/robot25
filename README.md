@@ -45,7 +45,9 @@ git status
 
 Checked in under `system-files`.
 
-Copy wifi connection files, remember to fill in WPA password.
+Copy wifi connection files
+  - chmod 600
+  - Fill in WPA password
 
 ## Configure bootup program
 
