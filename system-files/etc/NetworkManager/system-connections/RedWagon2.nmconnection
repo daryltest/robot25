@@ -13,7 +13,7 @@ ssid=RedWagon2
 [wifi-security]
 auth-alg=open
 key-mgmt=wpa-psk
-psk=SECRET
+#psk=SECRET
 
 [ipv4]
 method=auto
