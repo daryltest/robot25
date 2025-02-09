@@ -22,6 +22,10 @@ time.sleep(10.0)
 while True:
 	frame = picam2.capture_array("main")
 
+	if frame is None:
+		print "frame == NONe"
+		break
+
 	# show the frame to our screen
 	cv2.imshow("track3", frame)
 
