@@ -8,14 +8,14 @@ config = picam2.create_still_configuration(main= {"size": (1640, 1232)}, lores =
 picam2.configure(config)
 
 t_1 = time.monotonic()
-print(f"startup {round(t1 - t0, 3)}s")
+print(f"startup {round(t_1 - t_0, 3)}s")
 t_0 = time.monotonic()
 
 picam2.set_controls({"ExposureTime": 10000, "AnalogueGain": 5}) #Shutter time and analogue signal boost
 picam2.start(show_preview=True)
 
 t_1 = time.monotonic()
-print(f"startup {round(t1 - t0, 3)}s")
+print(f"picam2 {round(t_1 - t_0, 3)}s")
 
 time.sleep(5)  #enjoy the preview
 
@@ -24,7 +24,7 @@ img = picam2.capture_array("lores") #this takes a picture. img can be used with 
 picam2.close() #when you're done taking photos, this closes the camera connection
 
 t_1 = time.monotonic()
-print(f"capture {round(t1 - t0, 3)}s")
+print(f"capture {round(t_1 - t_0, 3)}s")
 t_0 = time.monotonic()
 
 print("width height\t:", *img.shape[0:2][::-1])
