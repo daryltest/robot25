@@ -9,14 +9,14 @@ targetLower = (29, 86, 6)
 targetUpper = (64, 255, 255)
 
 picam2 = Picamera2()
-config = picam2.create_still_configuration(main = {"size": (820, 616)})
+config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "BGR888"}, buffer_count = 3, queue = False)
 picam2.configure(config)
 picam2.set_controls({"AnalogueGain": 2.0})
 
 picam2.start(show_preview=False)
 
 # allow the camera or video file to warm up
-time.sleep(10.0)
+time.sleep(6.0)
 
 # keep looping
 while True:
@@ -25,11 +25,12 @@ while True:
 	if frame is None:
 		print("frame == None")
 		break
+	print(f"got frame {frame.shape}")
 
 	# show the frame to our screen
 	cv2.imshow("track3", frame)
 
-	time.sleep(0.200);
+	#time.sleep(0.200);
 
 	#key = cv2.waitKey(1) & 0xFF
 	# if the 'q' key is pressed, stop the loop
