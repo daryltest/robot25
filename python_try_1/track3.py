@@ -23,7 +23,7 @@ while True:
 	frame = picam2.capture_array("main")
 
 	if frame is None:
-		print "frame == NONe"
+		print("frame == None")
 		break
 
 	# show the frame to our screen
