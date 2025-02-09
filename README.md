@@ -17,6 +17,23 @@ Download, build, and install pigpio
     - Locale: en.us UTF8 (locale on first boot seems kind of random?)
     - Keyboard: en.us-generic 104 (Generic 104, English (US), No AltGr, No Compose)
 
+Think about making swap space bigger in `/etc/dphys-swapfile`:
+```
+CONF_SWAPFILE=2048
+```
+
+# Install Python OpenCV
+
+```
+python --version
+sudo apt install python3-opencv
+py
+>>> import cv2
+>>> cv2.__version__
+>>> import numpy
+>>> numpy.__version__
+```
+
 # Pigpio
 
 https://abyz.me.uk/rpi/pigpio/download.html
