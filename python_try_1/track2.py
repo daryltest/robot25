@@ -4,7 +4,7 @@ from picamera2 import Picamera2
 import cv2
 
 picam2 = Picamera2()
-config = picam2.create_still_configuration(main= {"size": (1640, 1232)}, lores = {"size": (410, 308)}, display = "lores", buffer_count = 3, queue = False)
+config = picam2.create_still_configuration(main = {"size": (1640, 1232)}, lores = {"size": (410, 308)}, display = "lores", buffer_count = 3, queue = False)
 picam2.configure(config)
 
 t_1 = time.monotonic()
@@ -20,7 +20,7 @@ print(f"picam2 {round(t_1 - t_0, 3)}s")
 time.sleep(5)  #enjoy the preview
 
 t_0 = time.monotonic()
-img = picam2.capture_array("lores") #this takes a picture. img can be used with cv2
+img = picam2.capture_array("main") #this takes a picture. img can be used with cv2
 picam2.close() #when you're done taking photos, this closes the camera connection
 
 t_1 = time.monotonic()
