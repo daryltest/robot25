@@ -13,25 +13,24 @@ config = picam2.create_still_configuration(main = {"size": (820, 616)})
 picam2.configure(config)
 picam2.set_controls({"AnalogueGain": 2.0})
 
-picam2.start(show_preview=True)
+picam2.start(show_preview=False)
 
 # allow the camera or video file to warm up
 time.sleep(10.0)
 
 # keep looping
 while True:
-  frame = picam2.capture_array("main")
-
+	frame = picam2.capture_array("main")
 
 	# show the frame to our screen
 	cv2.imshow("track3", frame)
 
-  time.sleep(0.200);
+	time.sleep(0.200);
 
-	key = cv2.waitKey(1) & 0xFF
+	#key = cv2.waitKey(1) & 0xFF
 	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
+	#if key == ord("q"):
+		#break
 
 picam2.close()
 
