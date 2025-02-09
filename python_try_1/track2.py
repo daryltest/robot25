@@ -1,7 +1,6 @@
-t_0 = time.monotonic()
-
-from picamera2 import Picamera2
 import time
+t_0 = time.monotonic()
+from picamera2 import Picamera2
 import cv2
 
 picam2 = Picamera2()
