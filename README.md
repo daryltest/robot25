@@ -34,6 +34,8 @@ py
 >>> numpy.__version__
 ```
 
+??? pip install --user imutils --break-system-packages
+
 # Pigpio
 
 https://abyz.me.uk/rpi/pigpio/download.html
