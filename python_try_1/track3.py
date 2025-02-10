@@ -41,7 +41,6 @@ while True:
 	# (x, y) center of the ball
 	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
 	print(f"clen {len(cnts)}")
 	cnts = cnts[0]
 	center = None
