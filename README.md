@@ -55,7 +55,7 @@ sudo apt install python3-setuptools
 
 ```
 git clone https://github.com/daryltest/robot24.git
-git config --add credential.helper cache
+git config --add credential.helper "cache --timeout 86400"
 git pull
 git status
 ```
