@@ -27,7 +27,7 @@ while True:
 		break
 	print(f"got frame {frame.shape}")
 
-	frame = cv2.resize(frame, (410, 308), interpolation=inter)
+	frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
 	# show the frame to our screen
 	cv2.imshow("rgb", frame)
 
