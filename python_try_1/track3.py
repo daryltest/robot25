@@ -27,15 +27,27 @@ while True:
 		break
 	print(f"got frame {frame.shape}")
 
+	# show the frame to our screen
+	cv2.imshow("track3", frame)
+	key = cv2.waitKey(0) & 0xFF
+	# if the 'q' key is pressed, stop the loop
+	if key == ord("q"):
+		break
+
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_RGB2HSV)
+	
+	cv2.imshow("track3", hsv)
+	key = cv2.waitKey(0) & 0xFF
+	# if the 'q' key is pressed, stop the loop
+	if key == ord("q"):
+		break
 
 	# construct a mask for the color "green", then perform
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	mask = cv2.inRange(hsv, targetLower, targetUpper)
 #	masked = cv2.bitwise_and(frame, frame, mask=mask)
-	
 	cv2.imshow("track3", mask)
 
 	key = cv2.waitKey(0) & 0xFF
@@ -72,13 +84,6 @@ while True:
 				(255, 255, 0), 2)
 			cv2.circle(frame, center, 5, (255, 0, 0), -1)
 
-	# show the frame to our screen
-	cv2.imshow("track3", frame)
-
-	key = cv2.waitKey(0) & 0xFF
-	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
 
 picam2.close()
 
