@@ -5,8 +5,8 @@ import time
 # define the lower and upper boundaries of the "target"
 # color in the HSV color space, then initialize the
 # list of tracked points
-targetLower = (153, 190, 6)
-targetUpper = (174, 255, 255)
+targetLower = (108, 190, 6)
+targetUpper = (120, 255, 255)
 
 picam2 = Picamera2()
 config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "RGB888"}, buffer_count = 3, queue = False)
