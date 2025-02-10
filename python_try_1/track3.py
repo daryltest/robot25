@@ -34,10 +34,9 @@ while True:
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	mask = cv2.inRange(hsv, targetLower, targetUpper)
-
-	masked = cv2.bitwise_and(frame, frame, mask=mask)
+#	masked = cv2.bitwise_and(frame, frame, mask=mask)
 	
-	cv2.imshow("track3", masked)
+	cv2.imshow("track3", mask)
 
 	key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
