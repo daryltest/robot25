@@ -32,7 +32,7 @@ while True:
 
 	#time.sleep(0.200);
 
-	key = cv2.waitKey(1) & 0xFF
+	key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
 	if key == ord("q"):
 		break
