@@ -34,6 +34,16 @@ while True:
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	mask = cv2.inRange(hsv, targetLower, targetUpper)
+
+	masked = cv2.bitwise_and(frame, frame, mask=mask)
+	
+	cv2.imshow("track3", masked)
+
+	key = cv2.waitKey(0) & 0xFF
+	# if the 'q' key is pressed, stop the loop
+	if key == ord("q"):
+		break
+	
 	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
 
@@ -65,8 +75,6 @@ while True:
 
 	# show the frame to our screen
 	cv2.imshow("track3", frame)
-
-	#time.sleep(0.200);
 
 	key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
