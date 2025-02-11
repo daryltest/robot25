@@ -20,6 +20,16 @@ time.sleep(6.0)
 
 # keep looping
 while True:
+	print("READY")
+	
+	key = cv2.waitKey(0) & 0xFF
+	# if the 'q' key is pressed, stop the loop
+	if key == ord("q"):
+		break
+	if key == ord("d"):
+		breakpoint()
+	time.sleep(2)
+	
 	frame = picam2.capture_array("main")
 
 	if frame is None:
@@ -31,9 +41,6 @@ while True:
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	
-	cv2.imshow("rgb", frame)
-	cv2.imshow("hsv", hsv)
-
 	# construct a mask for the color "green", then perform
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
@@ -43,16 +50,10 @@ while True:
 	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
 
+	cv2.imshow("rgb", frame)
+	cv2.imshow("hsv", hsv)
 	cv2.imshow("mask", mask)
 
-	key = cv2.waitKey(0) & 0xFF
-	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
-	if key == ord("d"):
-		breakpoint()
-	time.sleep(2)
-	
 	# find contours in the mask and initialize the current
 	# (x, y) center of the ball
 	#cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
