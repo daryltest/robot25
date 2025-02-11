@@ -5,7 +5,7 @@ import time
 # define the lower and upper boundaries of the "target"
 # color in the HSV color space, then initialize the
 # list of tracked points
-targetLower = (111, 190, 6)
+targetLower = (111, 210, 30)
 targetUpper = (121, 255, 255)
 
 picam2 = Picamera2()
@@ -20,15 +20,15 @@ time.sleep(6.0)
 
 # keep looping
 while True:
-	print("READY")
+	#print("READY")
 	
-	key = cv2.waitKey(0) & 0xFF
+	#key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
-	if key == ord("d"):
-		breakpoint()
-	time.sleep(2)
+	#if key == ord("q"):
+	#	break
+	#if key == ord("d"):
+	#	breakpoint()
+	#time.sleep(2)
 	
 	frame = picam2.capture_array("main")
 
@@ -37,7 +37,7 @@ while True:
 		break
 	print(f"got frame {frame.shape}")
 
-	frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
+	#frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	
@@ -51,7 +51,7 @@ while True:
 	mask = cv2.dilate(mask, None, iterations=2)
 
 	cv2.imshow("rgb", frame)
-	cv2.imshow("hsv", hsv)
+	#cv2.imshow("hsv", hsv)
 	cv2.imshow("mask", mask)
 
 	# find contours in the mask and initialize the current
@@ -80,6 +80,10 @@ while True:
 			cv2.circle(frame, (int(x), int(y)), int(radius),
 				(255, 255, 0), 2)
 			cv2.circle(frame, center, 5, (255, 0, 0), -1)
+			
+	key = cv2.waitKey(1) & 0xFF
+	if key == ord("q"):
+		break
 
 
 picam2.close()
