@@ -50,9 +50,9 @@ while True:
 	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
 
-	cv2.imshow("rgb", frame)
+	#cv2.imshow("rgb", frame)
 	#cv2.imshow("hsv", hsv)
-	cv2.imshow("mask", mask)
+	#cv2.imshow("mask", mask)
 
 	# find contours in the mask and initialize the current
 	# (x, y) center of the ball
@@ -79,6 +79,8 @@ while True:
 			cv2.circle(frame, (int(x), int(y)), int(radius),
 				(255, 255, 0), 2)
 			cv2.circle(frame, center, 5, (255, 0, 0), -1)
+			
+	cv2.imshow("rgb", frame)
 			
 	key = cv2.waitKey(1) & 0xFF
 	if key == ord("q"):
