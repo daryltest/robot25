@@ -51,6 +51,7 @@ while True:
 		break
 	if key == ord("d"):
 		breakpoint()
+	time.sleep(2)
 	
 	# find contours in the mask and initialize the current
 	# (x, y) center of the ball
