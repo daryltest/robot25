@@ -6,10 +6,10 @@ import time
 # color in the HSV color space, then initialize the
 # list of tracked points
 targetLower = (108, 190, 6)
-targetUpper = (120, 255, 255)
+targetUpper = (118, 255, 255)
 
 picam2 = Picamera2()
-config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "BGR888"})
+config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "RGB888"})
 picam2.configure(config)
 picam2.set_controls({"AnalogueGain": 2.0})
 
@@ -29,7 +29,7 @@ while True:
 
 	frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-	hsv = cv2.cvtColor(blurred, cv2.COLOR_RGB2HSV)
+	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	
 	cv2.imshow("rgb", frame)
 	cv2.imshow("hsv", hsv)
