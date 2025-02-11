@@ -33,12 +33,6 @@ while True:
 	
 	cv2.imshow("rgb", frame)
 	cv2.imshow("hsv", hsv)
-	key = cv2.waitKey(0) & 0xFF
-	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
-	if key == ord("d"):
-		breakpoint()
 
 	# construct a mask for the color "green", then perform
 	# a series of dilations and erosions to remove any small
@@ -51,6 +45,13 @@ while True:
 
 	cv2.imshow("mask", mask)
 
+	key = cv2.waitKey(0) & 0xFF
+	# if the 'q' key is pressed, stop the loop
+	if key == ord("q"):
+		break
+	if key == ord("d"):
+		breakpoint()
+	
 	# find contours in the mask and initialize the current
 	# (x, y) center of the ball
 	#cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
