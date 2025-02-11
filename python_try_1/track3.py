@@ -9,7 +9,7 @@ targetLower = (108, 190, 6)
 targetUpper = (120, 255, 255)
 
 picam2 = Picamera2()
-config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "RGB888"}, buffer_count = 3, queue = False)
+config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "BGR888"})
 picam2.configure(config)
 picam2.set_controls({"AnalogueGain": 2.0})
 
@@ -28,37 +28,39 @@ while True:
 	print(f"got frame {frame.shape}")
 
 	frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
-	# show the frame to our screen
-	cv2.imshow("rgb", frame)
-
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_RGB2HSV)
 	
+	cv2.imshow("rgb", frame)
 	cv2.imshow("hsv", hsv)
 	key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
 	if key == ord("q"):
 		break
+	if key == ord("d"):
+		breakpoint()
 
 	# construct a mask for the color "green", then perform
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	mask = cv2.inRange(hsv, targetLower, targetUpper)
 #	masked = cv2.bitwise_and(frame, frame, mask=mask)
-	#cv2.imshow("track3", mask)
 
 	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
 
+	cv2.imshow("mask", mask)
+
 	# find contours in the mask and initialize the current
 	# (x, y) center of the ball
-	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-		cv2.CHAIN_APPROX_SIMPLE)
-	cnts = cnts[0]
-	center = None
+	#cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+	#	cv2.CHAIN_APPROX_SIMPLE)
+	#cnts = cnts[0]
+	#center = None
 
 	# only proceed if at least one contour was found
-	if len(cnts) > 0:
+	#if len(cnts) > 0:
+	if False:
 		# find the largest contour in the mask, then use
 		# it to compute the minimum enclosing circle and
 		# centroid
