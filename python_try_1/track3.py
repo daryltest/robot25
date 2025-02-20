@@ -22,7 +22,7 @@ time.sleep(6.0)
 # keep looping
 while True:
 	#print("READY")
-	
+
 	#key = cv2.waitKey(0) & 0xFF
 	# if the 'q' key is pressed, stop the loop
 	#if key == ord("q"):
@@ -30,7 +30,7 @@ while True:
 	#if key == ord("d"):
 	#	breakpoint()
 	#time.sleep(2)
-	
+
 	frame = picam2.capture_array("main")
 
 	if frame is None:
@@ -39,10 +39,10 @@ while True:
 	print(f"got frame {frame.shape}")
 
 	frame = cv2.resize(frame, (410, 308), interpolation=cv2.INTER_AREA)
-	if false:
+	if False:
 		blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-	
+
 		# construct a mask for the target color, then perform
 		# a series of dilations and erosions to remove any small
 		# blobs left in the mask
