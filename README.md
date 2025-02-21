@@ -81,3 +81,12 @@ get openCV built?
   - https://towardsdatascience.com/installing-opencv-in-pizero-w-8e46bd42a3d3
 It looks like there are openCV packages in apt
   - apt-cache search opencv
+
+# Booting headless
+
+https://forums.raspberrypi.com/viewtopic.php?t=344067
+
+- sudo raspi-config system options -> boot/auto login
+- make sure SSH is intalled / working
+- Might need to configure VNC virtual frame buffer?
+- Make sure all preview windows are off in OpenCV / libcamera?
