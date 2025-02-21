@@ -34,7 +34,7 @@ py
 >>> numpy.__version__
 ```
 
-??? pip install --user imutils --break-system-packages
+~~??? pip install --user imutils --break-system-packages~~
 
 # Pigpio
 
