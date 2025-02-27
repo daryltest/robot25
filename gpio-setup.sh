@@ -29,7 +29,7 @@ pigs modes 27 w     # bin2
 pigs modes 23 r     # left_a
 pigs modes 22 r     # left_b
 
-# LEFT MOTOR SENSE
+# RIGHT MOTOR SENSE
 pigs modes 17 r     # right_a
 pigs modes 18 r     # right_b
 
