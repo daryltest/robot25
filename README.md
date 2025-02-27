@@ -90,3 +90,13 @@ https://forums.raspberrypi.com/viewtopic.php?t=344067
 - make sure SSH is intalled / working
 - Might need to configure VNC virtual frame buffer?
 - Make sure all preview windows are off in OpenCV / libcamera?
+
+# Dev setup
+
+In VS Code, hit F1 and type SSH. Add ssh connection to Pi. Clone the repo on the Pi and edit in VS Code.
+
+Sample build command:
+
+```
+g++ -Wall *.cpp -lpigpio -o robot
+```
