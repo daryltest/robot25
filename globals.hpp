@@ -15,8 +15,7 @@
 #define RIGHT_SENSE_A 17
 #define RIGHT_SENSE_B 18
 
-#define BTN_GREEN 9
-#define BTN_BLUE 11
+#define BTN_GREEN 11
 
 #define LED_RED 16
 #define LED_GREEN 20

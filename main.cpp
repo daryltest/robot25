@@ -59,15 +59,11 @@ int main() {
 
     signal(SIGCONT, SIG_IGN);
 
-    readProgram();
+    // readProgram();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
     gpioSetPullUpDown(BTN_GREEN, PI_PUD_UP);
     gpioNoiseFilter(BTN_GREEN, 5000, 0);
-
-    gpioSetMode(BTN_BLUE, PI_INPUT);
-    gpioSetPullUpDown(BTN_BLUE, PI_PUD_UP);
-    gpioNoiseFilter(BTN_BLUE, 5000, 0);
 
     gpioSetMode(LED_RED, PI_OUTPUT);
     gpioWrite(LED_RED, 0);
@@ -82,43 +78,52 @@ int main() {
     gpioWrite(MTR_ENABLE, 0);
 
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
-    gpioSetAlertFuncEx(BTN_BLUE, buttonAlert, ((void *) "Blue"));
 
-    rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
-    rightMtr->setSpeed(0);
+    /////////
+    gpioWrite(LED_RED, 1);
+    waitForButton();
 
-    leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_A, LEFT_SENSE_B, true);
-    leftMtr->setSpeed(0);
+    gpioWrite(LED_GREEN, 1);
+    waitForButton();
 
-    gpioSetTimerFunc(0, 10, completeFeedbacks);
+    gpioWrite(LED_BLUE, 1);
+    waitForButton();
 
-    startTick = gpioTick();
+    // rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
+    // rightMtr->setSpeed(0);
 
-    while (true) {
-        gpioWrite(LED_BLUE, 1);
+    // leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_A, LEFT_SENSE_B, true);
+    // leftMtr->setSpeed(0);
 
-        waitForButton();
+    // gpioSetTimerFunc(0, 10, completeFeedbacks);
 
-        gpioWrite(LED_BLUE, 0);
-        gpioWrite(LED_GREEN, 1);
+    // startTick = gpioTick();
 
-        gpioWrite(MTR_ENABLE, 1);
+    // while (true) {
+    //     gpioWrite(LED_BLUE, 1);
 
-        runProgram();
+    //     waitForButton();
 
-        gpioWrite(MTR_ENABLE, 0);
-        leftMtr->setSpeed(0);
-        rightMtr->setSpeed(0);
+    //     gpioWrite(LED_BLUE, 0);
+    //     gpioWrite(LED_GREEN, 1);
 
-        gpioWrite(LED_GREEN, 0);
-        gpioWrite(LED_RED, 1);
+    //     gpioWrite(MTR_ENABLE, 1);
 
-        waitForButton();
+    //     runProgram();
 
-        rightMtr->position = 0;
-        leftMtr->position = 0;
-        gpioWrite(LED_RED, 0);
-    }
+    //     gpioWrite(MTR_ENABLE, 0);
+    //     leftMtr->setSpeed(0);
+    //     rightMtr->setSpeed(0);
+
+    //     gpioWrite(LED_GREEN, 0);
+    //     gpioWrite(LED_RED, 1);
+
+    //     waitForButton();
+
+    //     rightMtr->position = 0;
+    //     leftMtr->position = 0;
+    //     gpioWrite(LED_RED, 0);
+    // }
 }
 
 void readProgram() {
