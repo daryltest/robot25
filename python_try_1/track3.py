@@ -9,8 +9,7 @@ targetLower = (111, 210, 30)
 targetUpper = (121, 255, 255)
 
 picam2 = Picamera2()
-#config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "RGB888"})
-config = picam2.create_still_configuration(main = {"size": (1640, 1232), "format": "RGB888"})
+config = picam2.create_still_configuration(main = {"size": (820, 616), "format": "RGB888"})
 picam2.configure(config)
 picam2.set_controls({"AnalogueGain": 2.0})
 
