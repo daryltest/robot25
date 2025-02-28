@@ -1,4 +1,8 @@
-# robot24
+# robot25
+
+```
+g++ -Wall *.cpp -lpigpio -o robot
+```
 
 # TODO
 
@@ -106,8 +110,6 @@ https://forums.raspberrypi.com/viewtopic.php?t=344067
 # Dev setup
 
 In VS Code, hit F1 and type SSH. Add ssh connection to Pi. Clone the repo on the Pi and edit in VS Code.
-
-Sample build command:
 
 ```
 g++ -Wall *.cpp -lpigpio -o robot
