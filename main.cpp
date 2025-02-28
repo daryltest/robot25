@@ -25,6 +25,7 @@ using namespace std;
 uint32_t startTick;
 
 float targetProgramDuration = 0;
+float targetDistance = 0;
 float targetProgramEndTime = 0;
 uint programStep = 0;
 
@@ -37,16 +38,7 @@ int blueButtonCount = 0;
 
 void readProgram();
 void completeFeedbacks();
-void simProgram(); 
-float timeProgram();
-void runProgram();
-void runCommand(string command);
-void move(int distance);
-void turn(int distance);
-float nominalProgramTimeRemaining(int startStep);
-float nominalCommandTime(string command);
 void badConfig();
-void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining);
 
 void waitForButton();
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
@@ -59,7 +51,7 @@ int main() {
 
     signal(SIGCONT, SIG_IGN);
 
-    // readProgram();
+    readProgram();
 
     gpioSetMode(BTN_GREEN, PI_INPUT);
     gpioSetPullUpDown(BTN_GREEN, PI_PUD_UP);
@@ -79,57 +71,50 @@ int main() {
 
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
 
-    /////////
-    gpioWrite(LED_RED, 1);
-    waitForButton();
+    rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_B, RIGHT_SENSE_A, false);
+    rightMtr->setSpeed(0);
 
-    gpioWrite(LED_GREEN, 1);
-    waitForButton();
+    leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_B, LEFT_SENSE_A, true);
+    leftMtr->setSpeed(0);
 
-    gpioWrite(LED_BLUE, 1);
-    waitForButton();
+    startTick = gpioTick();
 
-    // rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_A, RIGHT_SENSE_B, false);
-    // rightMtr->setSpeed(0);
+    while (true) {
+        gpioWrite(LED_BLUE, 1);
 
-    // leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_A, LEFT_SENSE_B, true);
-    // leftMtr->setSpeed(0);
+        waitForButton();
 
-    // gpioSetTimerFunc(0, 10, completeFeedbacks);
+        gpioWrite(LED_BLUE, 0);
+        // gpioWrite(LED_GREEN, 1);
 
-    // startTick = gpioTick();
+        uint stopAt = gpioTick() + 700000u;
 
-    // while (true) {
-    //     gpioWrite(LED_BLUE, 1);
+        gpioWrite(MTR_ENABLE, 1);
+        leftMtr->setSpeed(0.78);
+        rightMtr->setSpeed(0.80);
 
-    //     waitForButton();
+        while (gpioTick() < stopAt) {
+            usleep(10000);
+        }
 
-    //     gpioWrite(LED_BLUE, 0);
-    //     gpioWrite(LED_GREEN, 1);
+        gpioWrite(LED_GREEN, 0);
+        gpioWrite(MTR_ENABLE, 0);
+        leftMtr->setSpeed(0);
+        rightMtr->setSpeed(0);
+    }
 
-    //     gpioWrite(MTR_ENABLE, 1);
+    rightMtr->setSpeed(0);
+    leftMtr->setSpeed(0);
 
-    //     runProgram();
-
-    //     gpioWrite(MTR_ENABLE, 0);
-    //     leftMtr->setSpeed(0);
-    //     rightMtr->setSpeed(0);
-
-    //     gpioWrite(LED_GREEN, 0);
-    //     gpioWrite(LED_RED, 1);
-
-    //     waitForButton();
-
-    //     rightMtr->position = 0;
-    //     leftMtr->position = 0;
-    //     gpioWrite(LED_RED, 0);
-    // }
+    gpioWrite(LED_RED, 0);
+    gpioWrite(LED_GREEN, 0);
+    gpioWrite(LED_BLUE, 0);    
 }
 
 void readProgram() {
     // std::ifstream file("/home/darylc/robot24/route.txt");
 
-    std::ifstream file("/boot/robotroute.txt");
+    std::ifstream file("/boot/robotdistance.txt");
     std::string str;
 
     while (std::getline(file, str))
@@ -142,144 +127,23 @@ void readProgram() {
             continue;
         }
 
-        if (targetProgramDuration == 0) {
+        if (targetDistance == 0) {
             try {
-                targetProgramDuration = std::stoi(str);
+                targetDistance = std::stof(str);
             }
             catch (std::invalid_argument const& ex) {
                 badConfig();
             }
+
             continue;
         }
-
-        if (nominalCommandTime(str) == 0) {
-            badConfig();
-        }
-
-        programCommands.push_back(str);
     }
 
-    cout << "Target program time: " << targetProgramDuration << "s\n";
-    cout << "Program commands:\n";
-
-    for (string command : programCommands) {
-        cout << command << ",";
+    if (targetDistance == 0) {
+        badConfig();
     }
-    cout << "Nominal program time: " << nominalProgramTimeRemaining(0) << "s\n";
     
-}
-
-void runProgram() {
-    targetProgramEndTime = gpioTick() / 1e6 + targetProgramDuration;
-
-    for (programStep = 0; programStep < programCommands.size(); ++programStep) {
-        float nominalTimeRemaining = nominalProgramTimeRemaining(programStep);
-        float targetTimeRemaining = targetProgramEndTime - gpioTick() / 1e6;
-
-        adjustMaxPower(nominalTimeRemaining, targetTimeRemaining);
-        
-        runCommand(programCommands[programStep]);
-    }
-}
-
-void adjustMaxPower(float nominalTimeRemaining, float targetTimeRemaining){
-    float scalingFactor = nominalTimeRemaining / targetTimeRemaining;
-
-    if (scalingFactor > 1.30) {
-        scalingFactor = 1.30;
-    } else if (scalingFactor < 0.50) {
-        scalingFactor = 0.50;
-    }
-
-    printf("nominal rem: %f  target rem: %f  scaling: %f\n", nominalTimeRemaining, targetTimeRemaining, scalingFactor);
-
-    pacingMaxPower = 0.50 * scalingFactor;
-    // printf("SCALING DISABLED");
-}
-
-
-void runCommand(string command) {
-    if        (command == "S1") {
-        move(1355);
-    } else if (command == "S2") {
-        move(3520);
-    } else if (command == "S3") {
-        move(5720);
-    } else if (command == "S4") {
-        move(7925);
-    } else if (command == "1") {
-        move(2200);
-    } else if (command == "2") {
-        move(4400);
-    } else if (command == "3") {
-        move(6590);
-    } else if (command == "B") {
-        move(-2185);
-    } else if (command == "R") {
-        turn(660);
-    } else if (command == ">") {
-        turn(22);
-    } else if (command == "L") {
-        turn(-660);
-    } else if (command == "<") {
-        turn(-22);
-    } else if (command == "U") {
-        turn(-1320);
-    } else if (command == "X1") {
-        move(1945);
-    } else if (command == "X2") {
-        move(4145);
-    } else if (command == "X3") {
-        move(6340);
-    }
-}
-
-float nominalProgramTimeRemaining(int startStep) {
-    float remaining = 0;
-
-    for (uint i = startStep; i < programCommands.size(); ++i) {
-        remaining += nominalCommandTime(programCommands[i]);
-    }
-
-    return remaining;
-}
-
-float nominalCommandTime(string command) {
-    if        (command == "S1") {
-        return 1.52;
-    } else if (command == "S2") {
-        return 3.65;
-    } else if (command == "S3") {
-        return 5.81;
-    } else if (command == "S4") {
-        return 7.95;
-    } else if (command == "1") {
-        return 2.40;
-    } else if (command == "2") {
-        return 4.56;
-    } else if (command == "3") {
-        return 6.66;
-    } else if (command == "B") {
-        return 2.42;
-    } else if (command == "R") {
-        return 0.88;
-    } else if (command == ">") {
-        return 0.3;
-    } else if (command == "L") {
-        return 0.83;
-    } else if (command == "<") {
-        return 0.3;
-    } else if (command == "U") {
-        return 1.52;
-    } else if (command == "X1") {
-        return 2.16;
-    } else if (command == "X2") {
-        return 4.30;
-    } else if (command == "X3") {
-        return 6.46;
-    }
-
-    return 0;
+    cout << "Target distance: " << targetDistance << "m\n";
 }
 
 void executeProgramStep(int rightDistance, int leftDistance) {
@@ -292,6 +156,7 @@ void executeProgramStep(int rightDistance, int leftDistance) {
 
     rightMtr->setSpeed(0.35 * (rightDistance < 0 ? -1 : 1));
     leftMtr->setSpeed(0.39 * (leftDistance < 0 ? -1 : 1));
+
     if (abs(rightDistance) < 200 && abs(leftDistance) < 200) {
         usleep(75000);
     } else {
@@ -311,19 +176,6 @@ void executeProgramStep(int rightDistance, int leftDistance) {
         usleep(10000);
     }
 }
-
-void move(int distance) {
-    int s = gpioTick();
-    executeProgramStep(distance, distance);
-    printf("move(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
-}
-
-void turn(int distance) {
-    int s = gpioTick();
-    executeProgramStep(-distance, distance);
-    printf("turn(%i) took %f sec\n", distance, (gpioTick() - s) / 1e6);
-}
-
 
 void completeFeedbacks() {
     uint32_t nowTick = gpioTick();
