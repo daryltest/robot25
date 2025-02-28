@@ -139,8 +139,8 @@ void executeProgramStep(int rightDistance, int leftDistance) {
         usleep(100000);
     }
 
-    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, pacingMaxPower, rightMtr->position);
-    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, pacingMaxPower, leftMtr->position);
+    Feedback* rightFeedback = new Feedback(rightTarget, 0.02, 0.03, 0.00, pacingMaxPower, rightMtr->position);
+    Feedback* leftFeedback = new Feedback(leftTarget, 0.02, 0.03, 0.00, pacingMaxPower, leftMtr->position);
 
     rightFeedback->partner = leftFeedback;
     leftFeedback->partner = rightFeedback;

@@ -32,13 +32,6 @@ float Feedback::update(int pos, uint32_t tick) {
     float err = target - pos;
     prevPos = pos;
 
-    float dErr_dT = (err - errPrev) / deltaT;
-    errPrev = err;
-
-    errInteg += err * deltaT;
-    
-    float control = kp * err + kd * dErr_dT + ki * errInteg;
-
     float maxPower = this->maxPower;
     
     if (partner != NULL) {
@@ -49,12 +42,37 @@ float Feedback::update(int pos, uint32_t tick) {
         }
     }
 
-    if (control > maxPower) {
+    float control = 0;
+
+    if (err > 40)
         control = maxPower;
-    }
-    else if (control < -maxPower) {
+    if (err > 15)
+        control = maxPower * 0.5;
+    if (err > 3)
+        control = maxPower * 0.25;
+
+    if (err < -40)
         control = -maxPower;
-    }
+    if (err < -15)
+        control = -maxPower * 0.5;
+    if (err < -3)
+        control = -maxPower * 0.25;
+
+
+
+    // float dErr_dT = (err - errPrev) / deltaT;
+    // errPrev = err;
+
+    // errInteg += err * deltaT;
+    
+    // float control = kp * err + kd * dErr_dT + ki * errInteg;
+
+    // if (control > maxPower) {
+    //     control = maxPower;
+    // }
+    // else if (control < -maxPower) {
+    //     control = -maxPower;
+    // }
 
     return control;
 }
