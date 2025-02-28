@@ -44,11 +44,11 @@ float Feedback::update(int pos, uint32_t tick) {
     if (partner != NULL) {
         int partnerAhead = abs(this->target - this->prevPos) - abs(partner->target - partner->prevPos);
 
-        if (partnerAhead >= 3) {
-            maxPower += 0.03;
-        }
+        // if (partnerAhead >= 3) {
+        //     maxPower += 0.03;
+        // }
         if (partnerAhead <= -3) {
-            maxPower -= 0.03;
+            maxPower -= 0.05;
         }
     }
 

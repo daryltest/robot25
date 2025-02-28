@@ -84,7 +84,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         }
     }
 
-    printf("Lspeed=%-4.2f  Rspeed=%-4.2f", leftMtr->speed, rightMtr->speed);
+    printf("  Lspeed=%-4.2f  Rspeed=%-4.2f", leftMtr->speed, rightMtr->speed);
 
     printf("\n");
 }
