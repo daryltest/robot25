@@ -13,7 +13,7 @@ public:
     Feedback* partner;
 
     Feedback(int target, float kp, float kd, float ki, float maxPower, int prevPos);
-    float update(int pos, uint32_t tick);
+    float update(int pos, uint32_t tick, float speed);
 };
 
 #endif

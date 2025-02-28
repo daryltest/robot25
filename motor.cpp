@@ -72,7 +72,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
     printf("Lpos=%-6i  Rpos=%-6i  time=%-8u", leftMtr->position, rightMtr->position, tick - startTick);
 
     if (feedback != NULL) {
-        float control = feedback->update(position, tick);
+        float control = feedback->update(position, tick, speed);
 
         if (control != FLT_MAX) {
             setPower(control);
@@ -83,7 +83,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         }
     }
 
-    printf("  Lspeed=%-4.2f  Rspeed=%-4.2f", leftMtr->speed, rightMtr->speed);
+    printf("  Lspeed=%-7.2f  Rspeed=%-7.2f", leftMtr->speed, rightMtr->speed);
     printf("  Lpower=%-4.2f  Rpower=%-4.2f", leftMtr->power, rightMtr->power);
 
     printf("\n");
@@ -94,19 +94,24 @@ void Motor::updateSpeed(int position, uint32_t tick) {
     recentPosTicks.push(tick);
 
     // Remove old entries:
-    uint32_t cutoffTick = tick - 3000;
+    // uint32_t cutoffTick = tick - 3000;
 
-    while (true) {
-        uint32_t frontTicks = recentPosTicks.front();
+    // while (true) {
+    //     uint32_t frontTicks = recentPosTicks.front();
 
-        if (frontTicks < cutoffTick) {
-            recentPositions.pop();
-            recentPosTicks.pop();
-        }
-        else {
-            break;
-        }
+    //     if (frontTicks < cutoffTick) {
+    //         recentPositions.pop();
+    //         recentPosTicks.pop();
+    //     }
+    //     else {
+    //         break;
+    //     }
+    // }
+    while (recentPosTicks.size() > 4) {
+        recentPositions.pop();
+        recentPosTicks.pop();
     }
+
 
     if (recentPosTicks.size() >= 2) {
         float dPos = recentPositions.back() - recentPositions.front();
