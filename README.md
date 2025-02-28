@@ -3,8 +3,14 @@
 # TODO
 
 Finish the vision/python thing
+
 Go headless
+
 See how it does on full-length and batteries
+
+Startup mode based on speed not ms
+
+target speed?
 
 ## Starting point
 
