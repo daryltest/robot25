@@ -26,6 +26,8 @@ Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB,
 }
 
 void Motor::setSpeed(float pwm) {
+    speed = pwm;
+
     bool fwd = true;
     if (pwm < 0) {
         fwd = false;
@@ -81,6 +83,8 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
             // printf("  ctl=FLT_MAX");
         }
     }
+
+    printf("Lspeed=%-4.2f  Rspeed=%-4.2f", leftMtr->speed, rightMtr->speed);
 
     printf("\n");
 }

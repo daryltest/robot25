@@ -7,6 +7,7 @@ public:
     bool invert;
     int lastSensePin, lastSenseA, lastSenseB;
     int position;
+    float speed;
 
     Feedback* feedback;
 

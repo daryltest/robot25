@@ -29,7 +29,7 @@ float targetDistance = 0;
 float targetProgramEndTime = 0;
 uint programStep = 0;
 
-float pacingMaxPower = 0.50;
+float pacingMaxPower = 0.90;
 
 std::vector<string> programCommands;
 
@@ -39,6 +39,8 @@ int blueButtonCount = 0;
 void readProgram();
 void completeFeedbacks();
 void badConfig();
+void executeProgramStep(int rightDistance, int leftDistance);
+void interruptHandler(int x);
 
 void waitForButton();
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
@@ -50,6 +52,7 @@ int main() {
     gpioInitialise();
 
     signal(SIGCONT, SIG_IGN);
+    signal(SIGINT, interruptHandler);
 
     readProgram();
 
@@ -77,6 +80,8 @@ int main() {
     leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_B, LEFT_SENSE_A, true);
     leftMtr->setSpeed(0);
 
+    gpioSetTimerFunc(0, 10, completeFeedbacks);
+
     startTick = gpioTick();
 
     while (true) {
@@ -85,20 +90,13 @@ int main() {
         waitForButton();
 
         gpioWrite(LED_BLUE, 0);
-        // gpioWrite(LED_GREEN, 1);
-
-        uint stopAt = gpioTick() + 700000u;
 
         gpioWrite(MTR_ENABLE, 1);
-        leftMtr->setSpeed(0.78);
-        rightMtr->setSpeed(0.80);
 
-        while (gpioTick() < stopAt) {
-            usleep(10000);
-        }
+        executeProgramStep(800, 800);
 
-        gpioWrite(LED_GREEN, 0);
         gpioWrite(MTR_ENABLE, 0);
+
         leftMtr->setSpeed(0);
         rightMtr->setSpeed(0);
     }
@@ -111,9 +109,87 @@ int main() {
     gpioWrite(LED_BLUE, 0);    
 }
 
-void readProgram() {
-    // std::ifstream file("/home/darylc/robot24/route.txt");
+void interruptHandler(int x) {
+    cout << "INTERRUPT\n";
 
+    gpioWrite(MTR_ENABLE, 0);
+    gpioWrite(RIGHT_PWM, 0);
+    gpioWrite(LEFT_PWM, 0);
+    gpioWrite(LED_RED, 0);
+    gpioWrite(LED_GREEN, 0);
+    gpioWrite(LED_BLUE, 0);
+
+    exit(0);
+}
+
+void executeProgramStep(int rightDistance, int leftDistance) {
+    while (rightMtr->feedback || leftMtr->feedback) {
+        usleep(10000);
+    }
+
+    int rightTarget = rightMtr->position + rightDistance;
+    int leftTarget = leftMtr->position + leftDistance;
+
+    rightMtr->setSpeed(0.60 * (rightDistance < 0 ? -1 : 1));
+    leftMtr->setSpeed(0.60 * (leftDistance < 0 ? -1 : 1));
+
+    if (abs(rightDistance) < 50 && abs(leftDistance) < 50) {
+        usleep(50000);
+    } else {
+        usleep(100000);
+    }
+
+    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, pacingMaxPower, rightMtr->position);
+    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, pacingMaxPower, leftMtr->position);
+
+    rightFeedback->partner = leftFeedback;
+    leftFeedback->partner = rightFeedback;
+
+    rightMtr->feedback = rightFeedback;
+    leftMtr->feedback = leftFeedback;
+
+    while (rightMtr->feedback || leftMtr->feedback) {
+        usleep(10000);
+    }
+}
+
+void completeFeedbacks() {
+    uint32_t nowTick = gpioTick();
+
+    // See if neither motor has moved in 30ms
+    Feedback* rFeed = rightMtr->feedback;
+    Feedback* lFeed = leftMtr->feedback;
+
+    if (rFeed && (nowTick - rFeed->prevTick > 30000) && lFeed && nowTick - lFeed->prevTick > 30000) {
+        cout << "\nCOMPLETED feeds " << nowTick << " L=" << rFeed->prevTick << " R=" << rFeed->prevTick << "\n";
+        rFeed->completed = true;
+        lFeed->completed = true;
+
+        rightMtr->feedback = NULL;
+        leftMtr->feedback = NULL;
+    }
+}
+
+void waitForButton() {
+    int count = greenButtonCount + blueButtonCount;
+
+    while (count == greenButtonCount + blueButtonCount) {
+        usleep(50000);
+    }
+}
+
+void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
+    if (level && !strcmp((const char *) user, "Green")) {
+        ++greenButtonCount;
+    }
+    if (level && !strcmp((const char *) user, "Blue")) {
+        ++blueButtonCount;
+    }
+    
+    cout << (const char *) user << " button " << (!level ? "released" : "pressed ") << " at " << tick << "\n";
+}
+
+void readProgram() {
     std::ifstream file("/boot/robotdistance.txt");
     std::string str;
 
@@ -144,73 +220,6 @@ void readProgram() {
     }
     
     cout << "Target distance: " << targetDistance << "m\n";
-}
-
-void executeProgramStep(int rightDistance, int leftDistance) {
-    while (rightMtr->feedback || leftMtr->feedback) {
-        usleep(10000);
-    }
-
-    int rightTarget = rightMtr->position + rightDistance;
-    int leftTarget = leftMtr->position + leftDistance;
-
-    rightMtr->setSpeed(0.35 * (rightDistance < 0 ? -1 : 1));
-    leftMtr->setSpeed(0.39 * (leftDistance < 0 ? -1 : 1));
-
-    if (abs(rightDistance) < 200 && abs(leftDistance) < 200) {
-        usleep(75000);
-    } else {
-        usleep(200000);
-    }
-
-    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.00003, 0.000, pacingMaxPower, rightMtr->position);
-    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.00003, 0.000, pacingMaxPower, leftMtr->position);
-
-    rightFeedback->partner = leftFeedback;
-    leftFeedback->partner = rightFeedback;
-
-    rightMtr->feedback = rightFeedback;
-    leftMtr->feedback = leftFeedback;
-
-    while (rightMtr->feedback || leftMtr->feedback) {
-        usleep(10000);
-    }
-}
-
-void completeFeedbacks() {
-    uint32_t nowTick = gpioTick();
-
-    // See if neither motor has moved in 30ms
-    Feedback* rFeed = rightMtr->feedback;
-    Feedback* lFeed = leftMtr->feedback;
-
-    if (rFeed && (nowTick - rFeed->prevTick > 30000) && lFeed && nowTick - lFeed->prevTick > 10000) {
-        cout << "\nCOMPLETED feeds " << nowTick << " L=" << rFeed->prevTick << " R=" << rFeed->prevTick << "\n";
-        rFeed->completed = true;
-        lFeed->completed = true;
-
-        rightMtr->feedback = NULL;
-        leftMtr->feedback = NULL;
-    }
-}
-
-void waitForButton() {
-    int count = greenButtonCount + blueButtonCount;
-
-    while (count == greenButtonCount + blueButtonCount) {
-        usleep(50000);
-    }
-}
-
-void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
-    if (level && !strcmp((const char *) user, "Green")) {
-        ++greenButtonCount;
-    }
-    if (level && !strcmp((const char *) user, "Blue")) {
-        ++blueButtonCount;
-    }
-    
-    cout << (const char *) user << " button " << (!level ? "released" : "pressed ") << " at " << tick << "\n";
 }
 
 void badConfig() {
