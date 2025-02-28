@@ -12,9 +12,9 @@ Go headless
 
 See how it does on full-length and batteries
 
-Startup mode based on speed not ms
+Startup mode based on power not ms
 
-target speed?
+target power?
 
 ## Starting point
 

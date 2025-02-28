@@ -25,15 +25,12 @@ Motor::Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB,
     gpioSetAlertFuncEx(pinSenseB, _senseAlert, this);
 }
 
-void Motor::setSpeed(float pwm) {
-    speed = pwm;
+void Motor::setPower(float power) {
+    this->power = power;
+    float pwm = abs(power);
 
-    bool fwd = true;
-    if (pwm < 0) {
-        fwd = false;
-        pwm = -pwm;
-    }
-
+    bool fwd = (power >= 0);
+    
     if (pwm == 0) {
         // Stop
         gpioWrite(pinCtl1, 0);
@@ -76,7 +73,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         float control = feedback->update(position, tick);
 
         if (control != FLT_MAX) {
-            setSpeed(control);
+            setPower(control);
             // printf("  ctl=%f", control);
         }
         else {
@@ -84,7 +81,7 @@ void Motor::senseAlert(int gpio, int level, uint32_t tick) {
         }
     }
 
-    printf("  Lspeed=%-4.2f  Rspeed=%-4.2f", leftMtr->speed, rightMtr->speed);
+    printf("  Lpower=%-4.2f  Rpower=%-4.2f", leftMtr->power, rightMtr->power);
 
     printf("\n");
 }

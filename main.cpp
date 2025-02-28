@@ -75,10 +75,10 @@ int main() {
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
 
     rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_B, RIGHT_SENSE_A, false);
-    rightMtr->setSpeed(0);
+    rightMtr->setPower(0);
 
     leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_B, LEFT_SENSE_A, true);
-    leftMtr->setSpeed(0);
+    leftMtr->setPower(0);
 
     gpioSetTimerFunc(0, 10, completeFeedbacks);
 
@@ -93,16 +93,16 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        executeProgramStep(4800, 4800);
+        executeProgramStep(4000, 4000);
 
         gpioWrite(MTR_ENABLE, 0);
 
-        leftMtr->setSpeed(0);
-        rightMtr->setSpeed(0);
+        leftMtr->setPower(0);
+        rightMtr->setPower(0);
     }
 
-    rightMtr->setSpeed(0);
-    leftMtr->setSpeed(0);
+    rightMtr->setPower(0);
+    leftMtr->setPower(0);
 
     gpioWrite(LED_RED, 0);
     gpioWrite(LED_GREEN, 0);
@@ -130,8 +130,8 @@ void executeProgramStep(int rightDistance, int leftDistance) {
     int rightTarget = rightMtr->position + rightDistance;
     int leftTarget = leftMtr->position + leftDistance;
 
-    rightMtr->setSpeed(0.60 * (rightDistance < 0 ? -1 : 1));
-    leftMtr->setSpeed(0.60 * (leftDistance < 0 ? -1 : 1));
+    rightMtr->setPower(0.60 * (rightDistance < 0 ? -1 : 1));
+    leftMtr->setPower(0.60 * (leftDistance < 0 ? -1 : 1));
 
     if (abs(rightDistance) < 50 && abs(leftDistance) < 50) {
         usleep(50000);

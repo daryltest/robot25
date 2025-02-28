@@ -7,12 +7,12 @@ public:
     bool invert;
     int lastSensePin, lastSenseA, lastSenseB;
     int position;
-    float speed;
+    float power;
 
     Feedback* feedback;
 
     Motor(int pinCtl1, int pinCtl2, int pinPwm, int pinSenseA, int pinSenseB, bool invert);
-    void setSpeed(float pwm);
+    void setPower(float power);
     static void _senseAlert(int gpio, int level, uint32_t tick, void* user);
     void senseAlert(int gpio, int level, uint32_t tick);
     void kickstart();
