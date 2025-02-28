@@ -29,7 +29,7 @@ float targetDistance = 0;
 float targetProgramEndTime = 0;
 uint programStep = 0;
 
-float pacingMaxPower = 0.90;
+float pacingMaxPower = 0.80;
 
 std::vector<string> programCommands;
 
@@ -93,7 +93,7 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        executeProgramStep(800, 800);
+        executeProgramStep(1800, 1800);
 
         gpioWrite(MTR_ENABLE, 0);
 
