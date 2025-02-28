@@ -167,6 +167,9 @@ void completeFeedbacks() {
 
         rightMtr->feedback = NULL;
         leftMtr->feedback = NULL;
+
+        // TODO: these should be deleted, but they're only accessed from pigpio callbacks so potentially
+        // very multi-threaded and racy.
     }
 }
 

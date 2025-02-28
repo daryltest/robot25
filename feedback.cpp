@@ -35,6 +35,8 @@ float Feedback::update(int pos, uint32_t tick) {
     float dErr_dT = (err - errPrev) / deltaT;
     errPrev = err;
 
+    // printf(" dErr=%f", dErr_dT);
+
     errInteg += err * deltaT;
     
     float control = kp * err + kd * dErr_dT + ki * errInteg;
