@@ -1,5 +1,11 @@
 # robot24
 
+# TODO
+
+Finish the vision/python thing
+Go headless
+See how it does on full-length and batteries
+
 ## Starting point
 
 RaspiOS
