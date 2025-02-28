@@ -21,7 +21,7 @@
 #define LED_GREEN 20
 #define LED_BLUE 21
 
-#define MAX_PWM_DUTY 550000
+#define MAX_PWM_DUTY 500000
 
 extern uint32_t startTick;
 extern float targetProgramDuration;

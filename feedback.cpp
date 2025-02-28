@@ -17,7 +17,7 @@ Feedback::Feedback(int target, float kp, float kd, float ki, float maxPower, int
     prevTick = gpioTick();
 }
 
-float Feedback::update(int pos, uint32_t tick) {
+float Feedback::update(int pos, uint32_t tick, float speed) {
     if (tick == prevTick) {
         return FLT_MAX; // Let us not divide by zero
     }
@@ -35,6 +35,13 @@ float Feedback::update(int pos, uint32_t tick) {
     float dErr_dT = (err - errPrev) / deltaT;
     errPrev = err;
 
+    printf(" dErr=%-8.2f", dErr_dT);
+
+    if (speed > 0) {
+        // Use speed if available
+        dErr_dT = (target > pos) ? -speed : speed;
+    }
+
     errInteg += err * deltaT;
     
     float control = kp * err + kd * dErr_dT + ki * errInteg;
@@ -44,8 +51,21 @@ float Feedback::update(int pos, uint32_t tick) {
     if (partner != NULL) {
         int partnerAhead = abs(this->target - this->prevPos) - abs(partner->target - partner->prevPos);
 
-        if (partnerAhead >= 3) {
-            maxPower += 0.04;
+        if (partnerAhead >= 2) {
+            maxPower += 0.03;
+        }
+        if (partnerAhead >= 4) {
+            maxPower += 0.02;
+        }
+        if (partnerAhead >= 6) {
+            maxPower += 0.02;
+        }
+
+        if (partnerAhead <= -2) {
+            maxPower -= 0.02;
+        }
+        if (partnerAhead <= -4) {
+            maxPower -= 0.02;
         }
     }
 
