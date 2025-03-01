@@ -38,7 +38,8 @@ float Feedback::update(int pos, uint32_t tick, float speed) {
     printf(" dErr=%-8.2f", dErr_dT);
 
     if (speed > 0) {
-        dErr_dT = speed;
+        // Use speed if available
+        dErr_dT = (target > pos) ? -speed : speed;
     }
 
     errInteg += err * deltaT;

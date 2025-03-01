@@ -74,10 +74,10 @@ int main() {
 
     gpioSetAlertFuncEx(BTN_GREEN, buttonAlert, ((void *) "Green"));
 
-    rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_B, RIGHT_SENSE_A, false);
+    rightMtr = new Motor(RIGHT_CTL_1, RIGHT_CTL_2, RIGHT_PWM, RIGHT_SENSE_B, RIGHT_SENSE_A, true);
     rightMtr->setPower(0);
 
-    leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_B, LEFT_SENSE_A, true);
+    leftMtr = new Motor(LEFT_CTL_1, LEFT_CTL_2, LEFT_PWM, LEFT_SENSE_B, LEFT_SENSE_A, false);
     leftMtr->setPower(0);
 
     gpioSetTimerFunc(0, 10, completeFeedbacks);
@@ -93,7 +93,8 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        executeProgramStep(2400, 2400);
+        // 7.0m executeProgramStep(19846, 19846);
+        executeProgramStep(21262, 21262);
 
         gpioWrite(MTR_ENABLE, 0);
 
@@ -142,8 +143,8 @@ void executeProgramStep(int rightDistance, int leftDistance) {
         usleep(100000);
     }
 
-    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.001, 0.000, pacingMaxPower, rightMtr->position);
-    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.001, 0.000, pacingMaxPower, leftMtr->position);
+    Feedback* rightFeedback = new Feedback(rightTarget, 0.014, 0.002, 0.000, pacingMaxPower, rightMtr->position);
+    Feedback* leftFeedback = new Feedback(leftTarget, 0.014, 0.002, 0.000, pacingMaxPower, leftMtr->position);
 
     rightFeedback->partner = leftFeedback;
     leftFeedback->partner = rightFeedback;
@@ -163,7 +164,10 @@ void completeFeedbacks() {
     Feedback* rFeed = rightMtr->feedback;
     Feedback* lFeed = leftMtr->feedback;
 
-    if (rFeed && (nowTick - rFeed->prevTick > 30000) && lFeed && nowTick - lFeed->prevTick > 30000) {
+    if (rFeed && lFeed &&
+        (nowTick - rFeed->prevTick > 30000) && abs(rFeed->target - rightMtr->position) < 50 &&
+        (nowTick - lFeed->prevTick > 30000) && abs(lFeed->target - leftMtr->position) < 50
+    ) {
         cout << "\nCOMPLETED feeds " << nowTick << " L=" << rFeed->prevTick << " R=" << rFeed->prevTick << "\n";
         rFeed->completed = true;
         lFeed->completed = true;
