@@ -16,6 +16,13 @@ Startup mode based on power not ms
 
 target power?
 
+# 9-DOF gyro
+
+**config.txt**
+```
+dtparam=i2c_arm=on,i2c_arm_baudrate=400000
+```
+
 ## Starting point
 
 RaspiOS
@@ -67,10 +74,28 @@ sudo make install
 sudo apt install python3-setuptools
 ```
 
+# Audio
+
+https://forums.adafruit.com/viewtopic.php?p=1045498&sid=23159f370e2f22a3435e66a3f058726b#p1045498
+
+**/boot/firmware/config.txt**
+```
+dtparam=audio=on
+gpio=12,13,a5
+audio_pwm_mode=2
+dtoverlay=audremap,pins_12_13
+```
+
+```
+aplay -l
+aplay /usr/share/sounds/alsa/Front_Right.wav
+speaker-test
+```
+
 # Clone
 
 ```
-git clone https://github.com/daryltest/robot24.git
+git clone https://github.com/daryltest/robot25.git
 git config --add credential.helper "cache --timeout 86400"
 git pull
 git status
@@ -88,8 +113,13 @@ Copy wifi connection files
 
 /etc/systemd/system/robot.service
   - `WantedBy=multi-user.target` entry is what makes it run on bootup
+  - Still have to enable it though: `systemctl enable robot`
+  - Also `status`, `start`, `stop`
+
   - Think about CPU affinity so it doesn't get interrupted?
-    - `isolcpus` in /boot/cmdline.txt
+    - `isolcpus=3` in /boot/firmware/cmdline.txt
+    - `cat /sys/devices/system/cpu/isolated`
+    - sudo taskset -c 3 ./robot
     - Pigpio doesn't seem to need it
 
 # Vision
