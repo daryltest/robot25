@@ -88,6 +88,9 @@ Copy wifi connection files
 
 /etc/systemd/system/robot.service
   - `WantedBy=multi-user.target` entry is what makes it run on bootup
+  - Still have to enable it though: `systemctl enable robot`
+  - Also `status`, `start`, `stop`
+
   - Think about CPU affinity so it doesn't get interrupted?
     - `isolcpus=3` in /boot/firmware/cmdline.txt
     - `cat /sys/devices/system/cpu/isolated`
