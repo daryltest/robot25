@@ -4,7 +4,7 @@
 Description=Robot daemon
 
 [Service]
-# CPUAffinity=3
+CPUAffinity=3
 Type=simple
 PIDFile=robot.pid
 ExecStart=/home/darylc/robot24/prog

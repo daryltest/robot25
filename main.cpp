@@ -40,7 +40,7 @@ void readProgram();
 void completeFeedbacks();
 void badConfig();
 void executeProgramStep(int rightDistance, int leftDistance);
-void interruptHandler(int x);
+void sigHandler(int x);
 
 void waitForButton();
 void buttonAlert(int gpio, int level, uint32_t tick, void* user);
@@ -52,7 +52,8 @@ int main() {
     gpioInitialise();
 
     signal(SIGCONT, SIG_IGN);
-    signal(SIGINT, interruptHandler);
+    signal(SIGINT, sigHandler);
+    signal(SIGTERM, sigHandler);
 
     readProgram();
 
@@ -93,16 +94,13 @@ int main() {
 
         gpioWrite(MTR_ENABLE, 1);
 
-        // 7.0m executeProgramStep(19846, 19846);
-        executeProgramStep(21262, 21262);
+        int motorTicks = static_cast<int>(round(targetDistance * 2832.8611));
+        executeProgramStep(motorTicks, motorTicks);
 
         gpioWrite(MTR_ENABLE, 0);
 
         rightMtr->setPower(0);
         leftMtr->setPower(0);
-
-        rightMtr->position = 0;
-        leftMtr->position = 0;
     }
 
     rightMtr->setPower(0);
@@ -113,7 +111,7 @@ int main() {
     gpioWrite(LED_BLUE, 0);    
 }
 
-void interruptHandler(int x) {
+void sigHandler(int x) {
     cout << "INTERRUPT\n";
 
     gpioWrite(MTR_ENABLE, 0);
@@ -200,7 +198,7 @@ void buttonAlert(int gpio, int level, uint32_t tick, void* user) {
 }
 
 void readProgram() {
-    std::ifstream file("/boot/robotdistance.txt");
+    std::ifstream file("/boot/firmware/robotdistance.txt");
     std::string str;
 
     while (std::getline(file, str))
