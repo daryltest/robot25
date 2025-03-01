@@ -89,7 +89,9 @@ Copy wifi connection files
 /etc/systemd/system/robot.service
   - `WantedBy=multi-user.target` entry is what makes it run on bootup
   - Think about CPU affinity so it doesn't get interrupted?
-    - `isolcpus` in /boot/cmdline.txt
+    - `isolcpus=3` in /boot/firmware/cmdline.txt
+    - `cat /sys/devices/system/cpu/isolated`
+    - sudo taskset -c 3 ./robot
     - Pigpio doesn't seem to need it
 
 # Vision
