@@ -67,6 +67,24 @@ sudo make install
 sudo apt install python3-setuptools
 ```
 
+# Audio
+
+https://forums.adafruit.com/viewtopic.php?p=1045498&sid=23159f370e2f22a3435e66a3f058726b#p1045498
+
+**/boot/firmware/config.txt**
+```
+dtparam=audio=on
+gpio=12,13,a5
+audio_pwm_mode=2
+dtoverlay=audremap,pins_12_13
+```
+
+```
+aplay -l
+aplay /usr/share/sounds/alsa/Front_Right.wav
+speaker-test
+```
+
 # Clone
 
 ```
