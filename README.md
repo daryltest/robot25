@@ -88,7 +88,7 @@ speaker-test
 # Clone
 
 ```
-git clone https://github.com/daryltest/robot24.git
+git clone https://github.com/daryltest/robot25.git
 git config --add credential.helper "cache --timeout 86400"
 git pull
 git status
