@@ -8,6 +8,13 @@ g++ -Wall *.cpp -lpigpio -o robot
 
 Finish the vision/python thing
 
+# 9-DOF gyro
+
+**config.txt**
+```
+dtparam=i2c_arm=on,i2c_arm_baudrate=400000
+```
+
 Go headless
 
 See how it does on full-length and batteries
