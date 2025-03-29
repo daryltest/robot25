@@ -8,13 +8,6 @@ g++ -Wall *.cpp -lpigpio -o robot
 
 Finish the vision/python thing
 
-# 9-DOF gyro
-
-**config.txt**
-```
-dtparam=i2c_arm=on,i2c_arm_baudrate=400000
-```
-
 Go headless
 
 See how it does on full-length and batteries
@@ -22,6 +15,13 @@ See how it does on full-length and batteries
 Startup mode based on power not ms
 
 target power?
+
+# 9-DOF gyro
+
+**config.txt**
+```
+dtparam=i2c_arm=on,i2c_arm_baudrate=400000
+```
 
 ## Starting point
 
