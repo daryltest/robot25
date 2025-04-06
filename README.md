@@ -23,6 +23,11 @@ target power?
 dtparam=i2c_arm=on,i2c_arm_baudrate=400000
 ```
 
+Serial mode estup:
+```
+stty -F /dev/ttyS0 speed 115200 cs8 sane
+```
+
 ## Starting point
 
 RaspiOS
