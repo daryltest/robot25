@@ -35,6 +35,7 @@ int main(void)
     tio.c_iflag &= ~(IXON | IXOFF | IXANY);
     tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
     tio.c_cc[VTIME] = 0;
+    tio.c_cc[VMIN] = 0;
     //tio.c_cc[VMIN] = UART_RVC_PACKET_BYTES; // 19 bytes
     tio.c_cflag &= ~CSIZE;              // clear bit data
     tio.c_cflag |= CS8;                 // 8-bit data
@@ -52,42 +53,44 @@ void poll() {
     while (1)
     {
         uint8_t fd;
-        unsigned char buffer[200];
+        unsigned char buffer[100];
         memset(&buffer, '\0', sizeof(buffer));
         ssize_t bytes_read = read(uart_fd, buffer, sizeof(buffer));
         int found_header = 0;
         int i = 0;
         int rnd = 0;
 
-        if (bytes_read > 1) {
-            for (i = 1; i < bytes_read && !found_header; ++i) {
-                found_header = (buffer[i] == 0xAA && buffer[i - 1] == 0xAA);
+        if (bytes_read > 0) {
+            // for (i = 1; i < bytes_read && !found_header; ++i) {
+            //     found_header = (buffer[i] == 0xAA && buffer[i - 1] == 0xAA);
 
-                // if (buffer[i] == 0xAA && buffer[i - 1] == 0xAA) {
-                //     found_header = 1;
-                // }
-            }
+            //     // if (buffer[i] == 0xAA && buffer[i - 1] == 0xAA) {
+            //     //     found_header = 1;
+            //     // }
+            // }
 
-            if (found_header) {
-                printf("%3d : ", i);
+            // if (found_header) {
+            //     printf("%3d : ", i);
 
-                if (i == 2)
-                {
-                    uint8_t seq = buffer[2];
-                    printf("%3i : ", (int)seq);
+            //     if (i == 2)
+            //     {
+            //         uint8_t seq = buffer[2];
+            //         printf("%3i : ", (int)seq);
 
-                    uint16_t yaw_raw = (buffer[4] << 8) | buffer[3]; // Byte 8,9: Roll LSB, MSB
-                    int16_t yaw = (int16_t) yaw_raw;
-                    double value = (yaw * .01); // Converts int to float
+            //         uint16_t yaw_raw = (buffer[4] << 8) | buffer[3]; // Byte 8,9: Roll LSB, MSB
+            //         int16_t yaw = (int16_t) yaw_raw;
+            //         double value = (yaw * .01); // Converts int to float
     
-                    //printf("%d       ", yaw);
-                    printf("%8.2f°      ", value);
-                } else {
-                    //printf("       : ");
-                }
-            } else {
-                //printf("    :       : ", i);
-            }
+            //         //printf("%d       ", yaw);
+            //         printf("%8.2f°      ", value);
+            //     } else {
+            //         //printf("       : ");
+            //     }
+            // } else {
+            //     //printf("    :       : ", i);
+            // }
+
+            printf("%3d: ", bytes_read);
 
             for (i = 0; i < bytes_read; ++i) {
                 // printf("%02X ", (int) (buffer[i]));
@@ -97,12 +100,6 @@ void poll() {
         }
 
 
-       
-        if (found_header == 2 && !rnd) {
-            read(uart_fd, buffer, 9);
-            rnd = 1;
-        }
-
-        usleep(3000); // 10 ms for 100Hz
+        usleep(35000); // 10 ms for 100Hz
     }
 }
