@@ -8,12 +8,13 @@
 #include <termios.h>               // Contains POSIX terminal control definitions
 #include <unistd.h>                // write(), read(), close()
 #include <stdint.h>
+#include <sys/ioctl.h>
 
 #define UART_RVC_PATH "/dev/ttyS0" // Or /dev/ttyS2 if P9.22 was used
 #define UART_RVC_PACKET_BYTES 19
 
 int uart_fd;
-void poll();
+void poll_gyro();
 
 int main(void)
 {
@@ -44,62 +45,69 @@ int main(void)
     tcsetattr(uart_fd, TCSANOW, &tio);
     // close(uart_fd); // Closing the connection
 
-    poll();
+    poll_gyro();
 
     return 0;
 }
 
-void poll() {
-    while (1)
-    {
+void poll_gyro() {
+    while (1) {
         uint8_t fd;
         unsigned char buffer[100];
-        memset(&buffer, '\0', sizeof(buffer));
-        ssize_t bytes_read = read(uart_fd, buffer, sizeof(buffer));
-        int found_header = 0;
-        int i = 0;
-        int rnd = 0;
 
-        if (bytes_read > 0) {
-            // for (i = 1; i < bytes_read && !found_header; ++i) {
-            //     found_header = (buffer[i] == 0xAA && buffer[i - 1] == 0xAA);
+        int bytes_waiting;
+        ioctl(uart_fd, TIOCINQ, &bytes_waiting);
+        printf("(%3d)\n", bytes_waiting);
 
-            //     // if (buffer[i] == 0xAA && buffer[i - 1] == 0xAA) {
-            //     //     found_header = 1;
-            //     // }
-            // }
+        if (bytes_waiting >= 76) {
+            memset(&buffer, '\0', sizeof(buffer));
+            ssize_t bytes_read = read(uart_fd, buffer, sizeof(buffer));
+            int found_header = 0;
+            int i = 0;
+            int rnd = 0;
 
-            // if (found_header) {
-            //     printf("%3d : ", i);
 
-            //     if (i == 2)
-            //     {
-            //         uint8_t seq = buffer[2];
-            //         printf("%3i : ", (int)seq);
 
-            //         uint16_t yaw_raw = (buffer[4] << 8) | buffer[3]; // Byte 8,9: Roll LSB, MSB
-            //         int16_t yaw = (int16_t) yaw_raw;
-            //         double value = (yaw * .01); // Converts int to float
-    
-            //         //printf("%d       ", yaw);
-            //         printf("%8.2f°      ", value);
-            //     } else {
-            //         //printf("       : ");
-            //     }
-            // } else {
-            //     //printf("    :       : ", i);
-            // }
+            if (bytes_read > 0) {
+                // for (i = 1; i < bytes_read && !found_header; ++i) {
+                //     found_header = (buffer[i] == 0xAA && buffer[i - 1] == 0xAA);
 
-            printf("%3d: ", bytes_read);
+                //     // if (buffer[i] == 0xAA && buffer[i - 1] == 0xAA) {
+                //     //     found_header = 1;
+                //     // }
+                // }
 
-            for (i = 0; i < bytes_read; ++i) {
-                // printf("%02X ", (int) (buffer[i]));
+                // if (found_header) {
+                //     printf("%3d : ", i);
+
+                //     if (i == 2)
+                //     {
+                //         uint8_t seq = buffer[2];
+                //         printf("%3i : ", (int)seq);
+
+                //         uint16_t yaw_raw = (buffer[4] << 8) | buffer[3]; // Byte 8,9: Roll LSB, MSB
+                //         int16_t yaw = (int16_t) yaw_raw;
+                //         double value = (yaw * .01); // Converts int to float
+        
+                //         //printf("%d       ", yaw);
+                //         printf("%8.2f°      ", value);
+                //     } else {
+                //         //printf("       : ");
+                //     }
+                // } else {
+                //     //printf("    :       : ", i);
+                // }
+
+                printf("%3d: ", bytes_read);
+
+                for (i = 0; i < bytes_read; ++i) {
+                    // printf("%02X ", (int) (buffer[i]));
+                }
+
+                printf("\n");
             }
-
-            printf("\n");
         }
 
-
-        usleep(35000); // 10 ms for 100Hz
+        usleep(3000); // "other work"
     }
 }
